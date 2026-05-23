@@ -1,0 +1,301 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+}
+
+/* ── Screens ── */
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 480px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ── Typography ── */
+h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #c9a84c;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #c9a84c;
+  text-align: center;
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 0.95rem;
+}
+
+/* ── Inputs ── */
+#player-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.player-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #333;
+  background: #16213e;
+  color: #eee;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.player-input:focus {
+  border-color: #c9a84c;
+}
+
+/* ── Buttons ── */
+button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+#start-game-btn {
+  background: #c9a84c;
+  color: #1a1a2e;
+}
+
+#add-player-btn {
+  background: #16213e;
+  color: #c9a84c;
+  border: 1.5px solid #c9a84c;
+}
+
+#enter-scores-btn {
+  background: #c9a84c;
+  color: #1a1a2e;
+  margin-top: 12px;
+}
+
+#save-scores-btn {
+  background: #c9a84c;
+  color: #1a1a2e;
+}
+
+button.secondary {
+  background: transparent;
+  color: #aaa;
+  border: 1.5px solid #333;
+}
+
+#new-game-btn {
+  background: #c9a84c;
+  color: #1a1a2e;
+}
+
+/* ── Round Tracker ── */
+#round-tracker {
+  width: 100%;
+  background: #16213e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.round-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#round-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.round-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0f3460;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #aaa;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.round-dot.completed {
+  background: #2a5a2a;
+  color: #7ec87e;
+  border-color: #7ec87e;
+}
+
+.round-dot.current {
+  background: #c9a84c;
+  color: #1a1a2e;
+  border-color: #c9a84c;
+}
+
+#round-contract {
+  font-size: 0.85rem;
+  color: #c9a84c;
+  font-style: italic;
+}
+
+/* ── Scoreboard ── */
+#scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  background: #16213e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#scoreboard th,
+#scoreboard td {
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #0f3460;
+}
+
+#scoreboard th {
+  background: #0f3460;
+  color: #c9a84c;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+#scoreboard tfoot td {
+  background: #0f3460;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: none;
+}
+
+.score-cell {
+  color: #ddd;
+}
+
+/* Winning player highlight */
+.winning-player th,
+.winning-player td {
+  background: #1a3a1a !important;
+  color: #7ec87e !important;
+}
+
+/* ── Score Entry ── */
+#entry-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.entry-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #16213e;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.entry-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.entry-input {
+  width: 80px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #333;
+  background: #0f3460;
+  color: #eee;
+  font-size: 1rem;
+  text-align: center;
+  outline: none;
+}
+
+.entry-input:focus {
+  border-color: #c9a84c;
+}
+
+#entry-contract {
+  color: #aaa;
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── Game Over ── */
+#winner-display {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #7ec87e;
+  font-weight: 700;
+  padding: 16px;
+  background: #1a3a1a;
+  border-radius: 12px;
+  width: 100%;
+}
+
+#final-scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  background: #16213e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#final-scoreboard th,
+#final-scoreboard td {
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #0f3460;
+}
+
+#final-scoreboard th {
+  background: #0f3460;
+  color: #c9a84c;
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Continental Scorekeeper</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- SCREEN 1: Setup -->
+  <div id="screen-setup" class="screen active">
+    <h1>Continental</h1>
+    <p class="subtitle">Enter player names to start</p>
+
+    <div id="player-inputs">
+      <input type="text" class="player-input" placeholder="Player 1" maxlength="20" />
+      <input type="text" class="player-input" placeholder="Player 2" maxlength="20" />
+      <input type="text" class="player-input" placeholder="Player 3" maxlength="20" />
+      <input type="text" class="player-input" placeholder="Player 4" maxlength="20" />
+    </div>
+
+    <button id="add-player-btn">+ Add Player</button>
+    <button id="start-game-btn">Start Game</button>
+  </div>
+
+  <!-- SCREEN 2: Scoreboard -->
+  <div id="screen-game" class="screen">
+
+    <div id="round-tracker">
+      <div class="round-label">Round</div>
+      <div id="round-dots"></div>
+      <div id="round-contract"></div>
+    </div>
+
+    <table id="scoreboard">
+      <thead>
+        <tr id="header-row"></tr>
+      </thead>
+      <tbody id="score-rows"></tbody>
+      <tfoot>
+        <tr id="total-row"></tr>
+      </tfoot>
+    </table>
+
+    <button id="enter-scores-btn">Enter Round Scores</button>
+
+  </div>
+
+  <!-- SCREEN 3: Score Entry -->
+  <div id="screen-entry" class="screen">
+    <h2 id="entry-title"></h2>
+    <p id="entry-contract"></p>
+    <div id="entry-inputs"></div>
+    <button id="save-scores-btn">Save Scores</button>
+    <button id="cancel-entry-btn" class="secondary">Cancel</button>
+  </div>
+
+  <!-- SCREEN 4: Game Over -->
+  <div id="screen-gameover" class="screen">
+    <h1>Game Over</h1>
+    <div id="winner-display"></div>
+    <table id="final-scoreboard"></table>
+    <button id="new-game-btn">New Game</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
