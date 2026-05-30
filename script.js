@@ -1,12 +1,12 @@
 // ── Game Data ──────────────────────────────────────────────
 const ROUNDS = [
-  { number: 1, contract: "2 sets of 3" },
-  { number: 2, contract: "1 set of 3 + 1 sequence of 4" },
-  { number: 3, contract: "2 sequences of 4" },
-  { number: 4, contract: "3 sets of 3" },
-  { number: 5, contract: "2 sets of 3 + 1 sequence of 4" },
-  { number: 6, contract: "1 set of 3 + 2 sequences of 4" },
-  { number: 7, contract: "3 sequences of 4" },
+  { number: 1, contract: "1 Trio + 1 Escalera" },
+  { number: 2, contract: "2 Escaleras" },
+  { number: 3, contract: "3 Trios" },
+  { number: 4, contract: "2 Trios + 1 Escalera" },
+  { number: 5, contract: "1 Trio + 2 Escaleras" },
+  { number: 6, contract: "3 Escaleras" },
+  { number: 7, contract: "4 Escaleritas" },
 ];
 
 let players = [];
@@ -45,7 +45,6 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     return;
   }
 
-  // Initialize scores: array of arrays (one per player, one entry per round)
   scores = players.map(() => []);
   currentRound = 0;
 
@@ -110,7 +109,6 @@ function refreshTotals() {
 }
 
 function highlightWinner() {
-  // Lower score wins in rummy-style games
   const totals = players.map((_, i) =>
     scores[i].reduce((sum, val) => sum + (val || 0), 0)
   );
@@ -122,11 +120,9 @@ function highlightWinner() {
   const headerCells = headerRow.querySelectorAll('th');
   const totalCells = totalRow.querySelectorAll('td');
 
-  // Clear previous highlights
   headerCells.forEach(th => th.style.color = '');
   totalCells.forEach(td => td.style.color = '');
 
-  // Highlight the current leader (lowest score)
   totals.forEach((total, i) => {
     if (total === minScore && scores[i].length > 0) {
       headerCells[i + 1].style.color = '#7ec87e';
@@ -146,8 +142,14 @@ function updateRoundTracker() {
     dot.className = 'round-dot';
     dot.textContent = index + 1;
 
-    if (index < currentRound) dot.classList.add('completed');
-    else if (index === currentRound) dot.classList.add('current');
+    if (index < currentRound) {
+      dot.classList.add('completed');
+      dot.style.cursor = 'pointer';
+      dot.title = `Edit Round ${index + 1}`;
+      dot.addEventListener('click', () => openEntryScreen(index));
+    } else if (index === currentRound) {
+      dot.classList.add('current');
+    }
 
     dotsContainer.appendChild(dot);
   });
@@ -160,14 +162,12 @@ function updateRoundTracker() {
 }
 
 // ── Score Entry Screen ──────────────────────────────────────
-document.getElementById('enter-scores-btn').addEventListener('click', () => {
-  if (currentRound >= ROUNDS.length) {
-    endGame();
-    return;
-  }
+function openEntryScreen(roundIndex) {
+  const round = ROUNDS[roundIndex];
+  const isPastRound = roundIndex < currentRound;
 
-  const round = ROUNDS[currentRound];
-  document.getElementById('entry-title').textContent = `Round ${round.number} Scores`;
+  document.getElementById('entry-title').textContent =
+    isPastRound ? `Edit Round ${round.number} Scores` : `Round ${round.number} Scores`;
   document.getElementById('entry-contract').textContent = round.contract;
 
   const container = document.getElementById('entry-inputs');
@@ -185,8 +185,14 @@ document.getElementById('enter-scores-btn').addEventListener('click', () => {
     input.type = 'number';
     input.className = 'entry-input';
     input.min = 0;
-    input.placeholder = '0';
     input.dataset.playerIndex = i;
+    input.dataset.roundIndex = roundIndex;
+
+    if (scores[i][roundIndex] !== undefined) {
+      input.value = scores[i][roundIndex];
+    } else {
+      input.placeholder = '0';
+    }
 
     row.appendChild(label);
     row.appendChild(input);
@@ -194,6 +200,14 @@ document.getElementById('enter-scores-btn').addEventListener('click', () => {
   });
 
   showScreen('screen-entry');
+}
+
+document.getElementById('enter-scores-btn').addEventListener('click', () => {
+  if (currentRound >= ROUNDS.length) {
+    endGame();
+    return;
+  }
+  openEntryScreen(currentRound);
 });
 
 document.getElementById('save-scores-btn').addEventListener('click', () => {
@@ -201,9 +215,7 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
   let valid = true;
 
   inputs.forEach(input => {
-    if (input.value === '' || isNaN(input.value)) {
-      valid = false;
-    }
+    if (input.value === '' || isNaN(input.value)) valid = false;
   });
 
   if (!valid) {
@@ -211,12 +223,18 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
     return;
   }
 
+  const roundIndex = parseInt(inputs[0].dataset.roundIndex);
+  const isPastRound = roundIndex < currentRound;
+
   inputs.forEach(input => {
     const playerIndex = parseInt(input.dataset.playerIndex);
-    scores[playerIndex][currentRound] = parseInt(input.value);
+    scores[playerIndex][roundIndex] = Math.abs(parseInt(input.value));
   });
 
-  currentRound++;
+  if (!isPastRound) {
+    currentRound++;
+  }
+
   refreshScoreRows();
   updateRoundTracker();
   saveState();
@@ -229,11 +247,151 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
 });
 
 document.getElementById('cancel-entry-btn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to cancel? Your entered scores will be lost.')) {
+    showScreen('screen-game');
+  }
+});
+
+// ── Player Management ───────────────────────────────────────
+function openPlayerManagement() {
+  const list = document.getElementById('player-management-list');
+  list.innerHTML = '';
+
+  players.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'manage-row';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'manage-name-input';
+    input.value = name;
+    input.maxLength = 20;
+    input.dataset.playerIndex = i;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-player-btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => {
+      if (players.length <= 2) {
+        alert('You need at least 2 players.');
+        return;
+      }
+      if (confirm(`Remove ${players[i]} from the game?`)) {
+        players.splice(i, 1);
+        scores.splice(i, 1);
+        saveState();
+        buildScoreboard();
+        updateRoundTracker();
+        openPlayerManagement();
+      }
+    });
+
+    row.appendChild(input);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+  });
+
+  showScreen('screen-players');
+}
+
+document.getElementById('manage-players-btn').addEventListener('click', () => {
+  openPlayerManagement();
+});
+
+document.getElementById('add-midgame-player-btn').addEventListener('click', () => {
+  const name = prompt('Enter new player name:');
+  if (!name || !name.trim()) return;
+
+  players.push(name.trim());
+
+  const newScores = [];
+  for (let i = 0; i < currentRound; i++) {
+    newScores.push(0);
+  }
+  scores.push(newScores);
+
+  saveState();
+  buildScoreboard();
+  updateRoundTracker();
+  openPlayerManagement();
+});
+
+document.getElementById('done-managing-btn').addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.manage-name-input');
+  inputs.forEach(input => {
+    const i = parseInt(input.dataset.playerIndex);
+    const newName = input.value.trim();
+    if (newName) players[i] = newName;
+  });
+
+  saveState();
+  buildScoreboard();
+  updateRoundTracker();
   showScreen('screen-game');
 });
 
+// ── New Game Confirmation ───────────────────────────────────
+function goToNewGameScreen() {
+  showScreen('screen-newgame');
+}
+
+document.getElementById('new-game-midgame-btn').addEventListener('click', () => {
+  goToNewGameScreen();
+});
+
+document.getElementById('new-game-btn').addEventListener('click', () => {
+  goToNewGameScreen();
+});
+
+document.getElementById('keep-players-btn').addEventListener('click', () => {
+  const currentPlayers = [...players];
+
+  scores = currentPlayers.map(() => []);
+  currentRound = 0;
+  players = currentPlayers;
+
+  const container = document.getElementById('player-inputs');
+  container.innerHTML = '';
+  currentPlayers.forEach(name => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'player-input';
+    input.value = name;
+    input.maxLength = 20;
+    container.appendChild(input);
+  });
+
+  document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
+  clearState();
+  showScreen('screen-setup');
+});
+
+document.getElementById('fresh-start-btn').addEventListener('click', () => {
+  players = [];
+  scores = [];
+  currentRound = 0;
+  document.getElementById('player-inputs').innerHTML = `
+    <input type="text" class="player-input" placeholder="Player 1" maxlength="20" />
+    <input type="text" class="player-input" placeholder="Player 2" maxlength="20" />
+    <input type="text" class="player-input" placeholder="Player 3" maxlength="20" />
+    <input type="text" class="player-input" placeholder="Player 4" maxlength="20" />
+  `;
+  document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
+  clearState();
+  showScreen('screen-setup');
+});
+
+document.getElementById('cancel-newgame-btn').addEventListener('click', () => {
+  if (currentRound >= ROUNDS.length) {
+    buildGameOverScreen();
+    showScreen('screen-gameover');
+  } else {
+    showScreen('screen-game');
+  }
+});
+
 // ── Game Over ───────────────────────────────────────────────
-function endGame() {
+function buildGameOverScreen() {
   const totals = players.map((name, i) => ({
     name,
     total: scores[i].reduce((sum, val) => sum + (val || 0), 0)
@@ -259,24 +417,13 @@ function endGame() {
       `).join('')}
     </tbody>
   `;
+}
 
+function endGame() {
+  buildGameOverScreen();
   showScreen('screen-gameover');
   clearState();
 }
-
-document.getElementById('new-game-btn').addEventListener('click', () => {
-  players = [];
-  scores = [];
-  currentRound = 0;
-  document.getElementById('player-inputs').innerHTML = `
-    <input type="text" class="player-input" placeholder="Player 1" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 2" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 3" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 4" maxlength="20" />
-  `;
-  document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
-  showScreen('screen-setup');
-});
 
 // ── Save / Restore State ────────────────────────────────────
 function saveState() {

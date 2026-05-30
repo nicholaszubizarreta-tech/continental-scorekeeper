@@ -44,6 +44,8 @@
     </table>
 
     <button id="enter-scores-btn">Enter Round Scores</button>
+    <button id="manage-players-btn" class="secondary">Manage Players</button>
+    <button id="new-game-midgame-btn" class="secondary">New Game</button>
 
   </div>
 
@@ -62,6 +64,23 @@
     <div id="winner-display"></div>
     <table id="final-scoreboard"></table>
     <button id="new-game-btn">New Game</button>
+  </div>
+
+  <!-- SCREEN 5: Player Management -->
+  <div id="screen-players" class="screen">
+    <h2>Manage Players</h2>
+    <div id="player-management-list"></div>
+    <button id="add-midgame-player-btn">+ Add Player</button>
+    <button id="done-managing-btn" class="secondary">Done</button>
+  </div>
+
+  <!-- SCREEN 6: New Game Confirmation -->
+  <div id="screen-newgame" class="screen">
+    <h2>Start New Game?</h2>
+    <p class="subtitle">What would you like to do with the current players?</p>
+    <button id="keep-players-btn">Keep Players</button>
+    <button id="fresh-start-btn" class="secondary">Fresh Start</button>
+    <button id="cancel-newgame-btn" class="secondary">Cancel</button>
   </div>
 
   <script src="script.js"></script>
