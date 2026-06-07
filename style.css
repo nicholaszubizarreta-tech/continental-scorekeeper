@@ -356,3 +356,11 @@ button.secondary {
   color: #aaa;
   border: 1.5px solid #333;
 }
+
+/* ── Contract Column ── */
+.contract-cell {
+  color: #c9a84c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

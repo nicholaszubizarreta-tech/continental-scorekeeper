@@ -1,12 +1,12 @@
 // ── Game Data ──────────────────────────────────────────────
 const ROUNDS = [
-  { number: 1, contract: "1 Trio + 1 Escalera" },
-  { number: 2, contract: "2 Escaleras" },
-  { number: 3, contract: "3 Trios" },
-  { number: 4, contract: "2 Trios + 1 Escalera" },
-  { number: 5, contract: "1 Trio + 2 Escaleras" },
-  { number: 6, contract: "3 Escaleras" },
-  { number: 7, contract: "4 Escaleritas" },
+  { number: 1, contract: "1 Trio + 1 Escalera", short: "1T 1E" },
+  { number: 2, contract: "2 Escaleras", short: "2E" },
+  { number: 3, contract: "3 Trios", short: "3T" },
+  { number: 4, contract: "2 Trios + 1 Escalera", short: "2T 1E" },
+  { number: 5, contract: "1 Trio + 2 Escaleras", short: "1T 2E" },
+  { number: 6, contract: "3 Escaleras", short: "3E" },
+  { number: 7, contract: "4 Escaleritas", short: "4E*" },
 ];
 
 let players = [];
@@ -23,7 +23,7 @@ function showScreen(id) {
 document.getElementById('add-player-btn').addEventListener('click', () => {
   const container = document.getElementById('player-inputs');
   const count = container.querySelectorAll('.player-input').length;
-  if (count >= 8) return;
+  // No player limit
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'player-input';
@@ -59,7 +59,7 @@ function buildScoreboard() {
   const headerRow = document.getElementById('header-row');
   const totalRow = document.getElementById('total-row');
 
-  headerRow.innerHTML = '<th>Round</th>';
+  headerRow.innerHTML = '<th>Contract</th>';
   totalRow.innerHTML = '<td>Total</td>';
 
   players.forEach(name => {
@@ -81,9 +81,12 @@ function refreshScoreRows() {
 
   ROUNDS.forEach((round, roundIndex) => {
     const tr = document.createElement('tr');
-    const rdCell = document.createElement('td');
-    rdCell.textContent = round.number;
-    tr.appendChild(rdCell);
+
+    // Contract column using short format
+    const contractCell = document.createElement('td');
+    contractCell.textContent = round.short;
+    contractCell.className = 'contract-cell';
+    tr.appendChild(contractCell);
 
     players.forEach((_, playerIndex) => {
       const td = document.createElement('td');
@@ -370,12 +373,18 @@ document.getElementById('fresh-start-btn').addEventListener('click', () => {
   players = [];
   scores = [];
   currentRound = 0;
-  document.getElementById('player-inputs').innerHTML = `
-    <input type="text" class="player-input" placeholder="Player 1" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 2" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 3" maxlength="20" />
-    <input type="text" class="player-input" placeholder="Player 4" maxlength="20" />
-  `;
+
+  const container = document.getElementById('player-inputs');
+  container.innerHTML = '';
+  for (let i = 0; i < 2; i++) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'player-input';
+    input.placeholder = `Player ${i + 1}`;
+    input.maxLength = 20;
+    container.appendChild(input);
+  }
+
   document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
   clearState();
   showScreen('screen-setup');
