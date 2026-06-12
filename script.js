@@ -11,7 +11,10 @@ const ROUNDS = [
 
 let players = [];
 let scores = [];
+let doubletes = [];
 let currentRound = 0;
+let seatOrder = [];
+let firstDealer = 0;
 
 // ── Screen Switching ────────────────────────────────────────
 function showScreen(id) {
@@ -23,7 +26,6 @@ function showScreen(id) {
 document.getElementById('add-player-btn').addEventListener('click', () => {
   const container = document.getElementById('player-inputs');
   const count = container.querySelectorAll('.player-input').length;
-  // No player limit
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'player-input';
@@ -46,13 +48,124 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
   }
 
   scores = players.map(() => []);
+  doubletes = [];
   currentRound = 0;
+  seatOrder = players.map((_, i) => i);
+  firstDealer = 0;
 
+  openSeatingScreen();
+});
+
+// ── Seating Screen ──────────────────────────────────────────
+function openSeatingScreen() {
+  buildSeatingList();
+  buildDealerSelect();
+  showScreen('screen-seating');
+}
+
+function buildSeatingList() {
+  const list = document.getElementById('seating-list');
+  list.innerHTML = '';
+
+  seatOrder.forEach((playerIndex) => {
+    const row = document.createElement('div');
+    row.className = 'drag-row';
+    row.dataset.playerIndex = playerIndex;
+
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '☰';
+
+    const name = document.createElement('span');
+    name.className = 'drag-name';
+    name.textContent = players[playerIndex];
+
+    row.appendChild(handle);
+    row.appendChild(name);
+    list.appendChild(row);
+  });
+
+  // Sortable.js handles all drag and drop
+  Sortable.create(list, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    handle: '.drag-handle',
+  });
+}
+
+function buildDealerSelect() {
+  const container = document.getElementById('dealer-select');
+  container.innerHTML = '';
+
+  seatOrder.forEach((playerIndex, seatIndex) => {
+    const option = document.createElement('div');
+    option.className = 'dealer-option' + (seatIndex === firstDealer ? ' selected' : '');
+    option.textContent = players[playerIndex];
+    option.addEventListener('click', () => {
+      firstDealer = seatIndex;
+      buildDealerSelect();
+    });
+    container.appendChild(option);
+  });
+}
+
+function buildSeatingManageList() {
+  const list = document.getElementById('seating-manage-list');
+  list.innerHTML = '';
+
+  seatOrder.forEach((playerIndex) => {
+    const row = document.createElement('div');
+    row.className = 'drag-row';
+    row.dataset.playerIndex = playerIndex;
+
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '☰';
+
+    const name = document.createElement('span');
+    name.className = 'drag-name';
+    name.textContent = players[playerIndex];
+
+    row.appendChild(handle);
+    row.appendChild(name);
+    list.appendChild(row);
+  });
+
+  Sortable.create(list, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    handle: '.drag-handle',
+  });
+}
+
+document.getElementById('confirm-seating-btn').addEventListener('click', () => {
+  // Read final seating order from DOM after dragging
+  const rows = document.querySelectorAll('#seating-list .drag-row');
+  seatOrder = [...rows].map(row => parseInt(row.dataset.playerIndex));
+
+  // Update firstDealer based on dealer select
   buildScoreboard();
   updateRoundTracker();
+  updateDealerIndicator();
   showScreen('screen-game');
   saveState();
 });
+
+// ── Dealer Indicator ────────────────────────────────────────
+function updateDealerIndicator() {
+  if (seatOrder.length === 0) return;
+  const dealerSeatIndex = (firstDealer + currentRound) % seatOrder.length;
+  const dealerPlayerIndex = seatOrder[dealerSeatIndex];
+  const dealerName = players[dealerPlayerIndex];
+
+  const contractDisplay = document.getElementById('round-contract');
+  if (currentRound < ROUNDS.length) {
+    contractDisplay.textContent =
+      `Round ${currentRound + 1}: ${ROUNDS[currentRound].contract} — Dealer: ${dealerName}`;
+  } else {
+    contractDisplay.textContent = 'All rounds complete!';
+  }
+}
 
 // ── Scoreboard ──────────────────────────────────────────────
 function buildScoreboard() {
@@ -82,17 +195,28 @@ function refreshScoreRows() {
   ROUNDS.forEach((round, roundIndex) => {
     const tr = document.createElement('tr');
 
-    // Contract column using short format
     const contractCell = document.createElement('td');
-    contractCell.textContent = round.short;
     contractCell.className = 'contract-cell';
+    contractCell.textContent = round.short;
+
+    if (doubletes[roundIndex]) {
+      const marker = document.createElement('span');
+      marker.className = 'doblete-marker';
+      marker.textContent = ' 2x';
+      contractCell.appendChild(marker);
+    }
+
     tr.appendChild(contractCell);
 
     players.forEach((_, playerIndex) => {
       const td = document.createElement('td');
       td.className = 'score-cell';
       const val = scores[playerIndex][roundIndex];
-      td.textContent = val !== undefined ? val : '—';
+      if (val !== undefined) {
+        td.textContent = doubletes[roundIndex] ? val * 2 : val;
+      } else {
+        td.textContent = '—';
+      }
       tr.appendChild(td);
     });
 
@@ -106,14 +230,20 @@ function refreshScoreRows() {
 function refreshTotals() {
   const totalCells = document.querySelectorAll('#total-row td');
   players.forEach((_, i) => {
-    const total = scores[i].reduce((sum, val) => sum + (val || 0), 0);
+    const total = scores[i].reduce((sum, val, roundIndex) => {
+      const roundScore = val || 0;
+      return sum + (doubletes[roundIndex] ? roundScore * 2 : roundScore);
+    }, 0);
     totalCells[i + 1].textContent = total;
   });
 }
 
 function highlightWinner() {
   const totals = players.map((_, i) =>
-    scores[i].reduce((sum, val) => sum + (val || 0), 0)
+    scores[i].reduce((sum, val, roundIndex) => {
+      const roundScore = val || 0;
+      return sum + (doubletes[roundIndex] ? roundScore * 2 : roundScore);
+    }, 0)
   );
 
   const minScore = Math.min(...totals);
@@ -137,7 +267,6 @@ function highlightWinner() {
 // ── Round Tracker ───────────────────────────────────────────
 function updateRoundTracker() {
   const dotsContainer = document.getElementById('round-dots');
-  const contractDisplay = document.getElementById('round-contract');
   dotsContainer.innerHTML = '';
 
   ROUNDS.forEach((round, index) => {
@@ -157,11 +286,7 @@ function updateRoundTracker() {
     dotsContainer.appendChild(dot);
   });
 
-  if (currentRound < ROUNDS.length) {
-    contractDisplay.textContent = `Round ${currentRound + 1}: ${ROUNDS[currentRound].contract}`;
-  } else {
-    contractDisplay.textContent = 'All rounds complete!';
-  }
+  updateDealerIndicator();
 }
 
 // ── Score Entry Screen ──────────────────────────────────────
@@ -172,6 +297,9 @@ function openEntryScreen(roundIndex) {
   document.getElementById('entry-title').textContent =
     isPastRound ? `Edit Round ${round.number} Scores` : `Round ${round.number} Scores`;
   document.getElementById('entry-contract').textContent = round.contract;
+
+  const checkbox = document.getElementById('doblete-checkbox');
+  checkbox.checked = doubletes[roundIndex] === true;
 
   const container = document.getElementById('entry-inputs');
   container.innerHTML = '';
@@ -197,13 +325,48 @@ function openEntryScreen(roundIndex) {
       input.placeholder = '0';
     }
 
+    const doubledDisplay = document.createElement('div');
+    doubledDisplay.className = 'doubled-value';
+    doubledDisplay.id = `doubled-${i}`;
+    if (checkbox.checked && scores[i][roundIndex] !== undefined) {
+      doubledDisplay.textContent = `= ${scores[i][roundIndex] * 2}`;
+    } else {
+      doubledDisplay.textContent = '';
+    }
+
+    input.addEventListener('input', () => {
+      const isChecked = document.getElementById('doblete-checkbox').checked;
+      if (isChecked && input.value !== '') {
+        doubledDisplay.textContent = `= ${Math.abs(parseInt(input.value)) * 2}`;
+      } else {
+        doubledDisplay.textContent = '';
+      }
+    });
+
     row.appendChild(label);
     row.appendChild(input);
+    row.appendChild(doubledDisplay);
     container.appendChild(row);
   });
 
   showScreen('screen-entry');
 }
+
+document.getElementById('doblete-checkbox').addEventListener('change', () => {
+  const checked = document.getElementById('doblete-checkbox').checked;
+  const inputs = document.querySelectorAll('.entry-input');
+  inputs.forEach(input => {
+    const i = parseInt(input.dataset.playerIndex);
+    const display = document.getElementById(`doubled-${i}`);
+    if (display) {
+      if (checked && input.value !== '') {
+        display.textContent = `= ${Math.abs(parseInt(input.value)) * 2}`;
+      } else {
+        display.textContent = '';
+      }
+    }
+  });
+});
 
 document.getElementById('enter-scores-btn').addEventListener('click', () => {
   if (currentRound >= ROUNDS.length) {
@@ -228,6 +391,9 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
 
   const roundIndex = parseInt(inputs[0].dataset.roundIndex);
   const isPastRound = roundIndex < currentRound;
+
+  const isDoublete = document.getElementById('doblete-checkbox').checked;
+  doubletes[roundIndex] = isDoublete;
 
   inputs.forEach(input => {
     const playerIndex = parseInt(input.dataset.playerIndex);
@@ -280,6 +446,9 @@ function openPlayerManagement() {
         return;
       }
       if (confirm(`Remove ${players[i]} from the game?`)) {
+        // Remove from seatOrder too
+        seatOrder = seatOrder.filter(idx => idx !== i).map(idx => idx > i ? idx - 1 : idx);
+        if (firstDealer >= seatOrder.length) firstDealer = 0;
         players.splice(i, 1);
         scores.splice(i, 1);
         saveState();
@@ -294,6 +463,7 @@ function openPlayerManagement() {
     list.appendChild(row);
   });
 
+  buildSeatingManageList();
   showScreen('screen-players');
 }
 
@@ -305,6 +475,7 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
   const name = prompt('Enter new player name:');
   if (!name || !name.trim()) return;
 
+  const newIndex = players.length;
   players.push(name.trim());
 
   const newScores = [];
@@ -312,6 +483,7 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
     newScores.push(0);
   }
   scores.push(newScores);
+  seatOrder.push(newIndex);
 
   saveState();
   buildScoreboard();
@@ -320,12 +492,19 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
 });
 
 document.getElementById('done-managing-btn').addEventListener('click', () => {
-  const inputs = document.querySelectorAll('.manage-name-input');
-  inputs.forEach(input => {
+  // Save name edits
+  const nameInputs = document.querySelectorAll('.manage-name-input');
+  nameInputs.forEach(input => {
     const i = parseInt(input.dataset.playerIndex);
     const newName = input.value.trim();
     if (newName) players[i] = newName;
   });
+
+  // Save new seating order from drag list
+  const seatingRows = document.querySelectorAll('#seating-manage-list .drag-row');
+  if (seatingRows.length > 0) {
+    seatOrder = [...seatingRows].map(row => parseInt(row.dataset.playerIndex));
+  }
 
   saveState();
   buildScoreboard();
@@ -350,8 +529,11 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
   const currentPlayers = [...players];
 
   scores = currentPlayers.map(() => []);
+  doubletes = [];
   currentRound = 0;
   players = currentPlayers;
+  seatOrder = currentPlayers.map((_, i) => i);
+  firstDealer = 0;
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -372,7 +554,10 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
 document.getElementById('fresh-start-btn').addEventListener('click', () => {
   players = [];
   scores = [];
+  doubletes = [];
   currentRound = 0;
+  seatOrder = [];
+  firstDealer = 0;
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -403,7 +588,10 @@ document.getElementById('cancel-newgame-btn').addEventListener('click', () => {
 function buildGameOverScreen() {
   const totals = players.map((name, i) => ({
     name,
-    total: scores[i].reduce((sum, val) => sum + (val || 0), 0)
+    total: scores[i].reduce((sum, val, roundIndex) => {
+      const roundScore = val || 0;
+      return sum + (doubletes[roundIndex] ? roundScore * 2 : roundScore);
+    }, 0)
   }));
 
   totals.sort((a, b) => a.total - b.total);
@@ -436,7 +624,7 @@ function endGame() {
 
 // ── Save / Restore State ────────────────────────────────────
 function saveState() {
-  const state = { players, scores, currentRound };
+  const state = { players, scores, doubletes, currentRound, seatOrder, firstDealer };
   localStorage.setItem('continental_state', JSON.stringify(state));
 }
 
@@ -452,7 +640,10 @@ function loadState() {
     const state = JSON.parse(saved);
     players = state.players;
     scores = state.scores;
+    doubletes = state.doubletes || [];
     currentRound = state.currentRound;
+    seatOrder = state.seatOrder || players.map((_, i) => i);
+    firstDealer = state.firstDealer || 0;
 
     buildScoreboard();
     updateRoundTracker();

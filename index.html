@@ -54,6 +54,14 @@
     <h2 id="entry-title"></h2>
     <p id="entry-contract"></p>
     <div id="entry-inputs"></div>
+
+    <div id="doblete-row">
+      <label class="doblete-label">
+        <input type="checkbox" id="doblete-checkbox" />
+        Doblete — double all scores this round
+      </label>
+    </div>
+
     <button id="save-scores-btn">Save Scores</button>
     <button id="cancel-entry-btn" class="secondary">Cancel</button>
   </div>
@@ -71,6 +79,8 @@
     <h2>Manage Players</h2>
     <div id="player-management-list"></div>
     <button id="add-midgame-player-btn">+ Add Player</button>
+    <p class="manage-section-label" style="margin-top: 16px;">Drag to reorder seating</p>
+    <div id="seating-manage-list"></div>
     <button id="done-managing-btn" class="secondary">Done</button>
   </div>
 
@@ -83,6 +93,17 @@
     <button id="cancel-newgame-btn" class="secondary">Cancel</button>
   </div>
 
+  <!-- SCREEN 7: Seating Order -->
+  <div id="screen-seating" class="screen">
+    <h2>Seating Order</h2>
+    <p class="subtitle">Drag players into seating order</p>
+    <div id="seating-list"></div>
+    <p class="subtitle" style="margin-top: 16px;">Who deals first?</p>
+    <div id="dealer-select"></div>
+    <button id="confirm-seating-btn">Start Game</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

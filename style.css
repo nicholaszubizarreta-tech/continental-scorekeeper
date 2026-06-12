@@ -364,3 +364,133 @@ button.secondary {
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* ── Doblete ── */
+#doblete-row {
+  width: 100%;
+  background: #16213e;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.doblete-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #c9a84c;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.doblete-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #c9a84c;
+}
+
+.doubled-value {
+  color: #c9a84c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+}
+
+.doblete-marker {
+  font-size: 0.7rem;
+  color: #c9a84c;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* ── Seating / Drag ── */
+.drag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #16213e;
+  border-radius: 10px;
+  padding: 12px 16px;
+  width: 100%;
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+
+.drag-row.sortable-ghost {
+  opacity: 0.4;
+}
+
+.drag-handle {
+  color: #aaa;
+  font-size: 1.2rem;
+  cursor: grab;
+}
+
+.drag-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.dealer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #16213e;
+  border-radius: 10px;
+  padding: 12px 16px;
+  width: 100%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, color 0.2s;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.dealer-option.selected {
+  border-color: #c9a84c;
+  color: #c9a84c;
+}
+
+#dealer-select {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#seating-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#seating-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.dealer-indicator {
+  font-size: 0.75rem;
+  color: #c9a84c;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.manage-section-label {
+  color: #aaa;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+  text-align: left;
+  padding-left: 4px;
+}
