@@ -494,3 +494,80 @@ button.secondary {
   text-align: left;
   padding-left: 4px;
 }
+
+/* ── Rules Screen ── */
+#rules-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-section {
+  background: #16213e;
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-header {
+  color: #c9a84c;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.rules-text {
+  color: #ddd;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.rules-highlight {
+  color: #c9a84c;
+  font-weight: 600;
+}
+
+.rules-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rules-table-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #0f3460;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.rules-table-row-highlight {
+  border: 1px solid #c9a84c;
+}
+
+.rules-table-label {
+  color: #c9a84c;
+  font-weight: 700;
+  font-size: 0.82rem;
+  min-width: 70px;
+}
+
+.rules-table-value {
+  color: #ddd;
+  font-size: 0.85rem;
+}
+
+#close-rules-btn {
+  background: #c9a84c;
+  color: #1a1a2e;
+  margin-top: 8px;
+}

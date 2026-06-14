@@ -22,6 +22,7 @@
 
     <button id="add-player-btn">+ Add Player</button>
     <button id="start-game-btn">Start Game</button>
+    <button id="rules-btn-setup" class="secondary">Rules</button>
   </div>
 
   <!-- SCREEN 2: Scoreboard -->
@@ -45,6 +46,7 @@
 
     <button id="enter-scores-btn">Enter Round Scores</button>
     <button id="manage-players-btn" class="secondary">Manage Players</button>
+    <button id="rules-btn-game" class="secondary">Rules</button>
     <button id="new-game-midgame-btn" class="secondary">New Game</button>
 
   </div>
@@ -101,6 +103,125 @@
     <p class="subtitle" style="margin-top: 16px;">Who deals first?</p>
     <div id="dealer-select"></div>
     <button id="confirm-seating-btn">Start Game</button>
+  </div>
+
+  <!-- SCREEN 8: Rules Reference -->
+  <div id="screen-rules" class="screen">
+    <h1>Rules</h1>
+    <div id="rules-content">
+
+      <div class="rules-section">
+        <h3 class="rules-header">Overview</h3>
+        <p class="rules-text">Continental is a card game where players try to complete contracts and run out of cards, forcing other players to score points. The game is played over 7 rounds, each with a different contract. At the end of all 7 rounds the player with the least points wins.</p>
+        <p class="rules-text">The game can use one or more decks depending on the number of players. More players means more decks.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Setup</h3>
+        <p class="rules-text">At the beginning of each round the cards are shuffled by the dealer. Each player is dealt 11 cards. The remaining cards form the draw pile in the middle of the table. The top card is flipped face up to start the discard pile. The contract for the round is announced so all players know what they need to complete.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Card Values</h3>
+        <p class="rules-text">Cards are worth points based on their face value. Points left in your hand when someone goes out count against you.</p>
+        <div class="rules-table">
+          <div class="rules-table-row">
+            <span class="rules-table-label">2 – 10</span>
+            <span class="rules-table-value">Worth their number (2 = 2pts, 10 = 10pts)</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Face Cards</span>
+            <span class="rules-table-value">10 points each (Jack, Queen, King)</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">All Aces</span>
+            <span class="rules-table-value">20 points each</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Trios, Escaleras & Escalaritas</h3>
+        <p class="rules-text"><span class="rules-highlight">Trio</span> — A set of three cards of the same number across any suits. Example: 3 of Hearts, 3 of Diamonds, 3 of Spades.</p>
+        <p class="rules-text"><span class="rules-highlight">Escalera</span> — A sequence of four or more cards of the same suit in order. Example: Ace, 2, 3, 4 of Clubs.</p>
+        <p class="rules-text"><span class="rules-highlight">Escalarita</span> — A mini Escalera of exactly three cards of the same suit in order. Example: Ace, 2, 3 of Diamonds. Used only in Round 7.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Contracts</h3>
+        <p class="rules-text">Each round has a required contract that must be completed to go down.</p>
+        <div class="rules-table">
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 1</span>
+            <span class="rules-table-value">1 Trio + 1 Escalera</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 2</span>
+            <span class="rules-table-value">2 Escaleras</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 3</span>
+            <span class="rules-table-value">3 Trios</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 4</span>
+            <span class="rules-table-value">2 Trios + 1 Escalera</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 5</span>
+            <span class="rules-table-value">1 Trio + 2 Escaleras</span>
+          </div>
+          <div class="rules-table-row">
+            <span class="rules-table-label">Round 6</span>
+            <span class="rules-table-value">3 Escaleras</span>
+          </div>
+          <div class="rules-table-row rules-table-row-highlight">
+            <span class="rules-table-label">Round 7</span>
+            <span class="rules-table-value">4 Escalaritas ★</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">On Your Turn</h3>
+        <p class="rules-text">Play passes to the left starting with the player after the dealer. On your turn you must first draw a card — either from the top of the draw pile or the top of the discard pile.</p>
+        <p class="rules-text"><span class="rules-highlight">Drawing from the draw pile</span> — Before you continue your turn, going around the table from the next player, each person may claim the top card of the discard pile. Priority goes to the player closest to whoever just drew. If you discard before anyone claims the card it becomes dead in the discard pile.</p>
+        <p class="rules-text"><span class="rules-highlight">After drawing</span> — Check if you have completed the round contract. If not, discard a card and your turn ends. If you have completed the contract you may go down.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Going Down</h3>
+        <p class="rules-text">When you have completed the round contract you lay your Trios and Escaleras face up on the table in front of you. These cards are now part of the game and visible to everyone.</p>
+        <p class="rules-text">Once you are down you can no longer take from the discard pile — you must draw from the draw pile only. You may now play cards onto anyone's Trios or Escaleras on the table to empty your hand.</p>
+        <p class="rules-text">Players who have not yet gone down cannot play on the table but can still draw from the discard pile. Going out means running out of cards entirely — everyone else scores points for the cards left in their hands.</p>
+        <p class="rules-text"><span class="rules-highlight">Playing on Trios</span> — Add any card of the same number to someone's Trio.</p>
+        <p class="rules-text"><span class="rules-highlight">Playing on Escaleras</span> — You must extend the sequence. If the Escalera is Ace through 4 of Hearts you need the 5 of Hearts to play on it.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Red Aces — Wild Cards</h3>
+        <p class="rules-text">Red Aces (Hearts and Diamonds) are wild cards and can stand in for any card in a Trio or Escalera.</p>
+        <p class="rules-text"><span class="rules-highlight">In a Trio</span> — The Red Ace acts as the matching number.</p>
+        <p class="rules-text"><span class="rules-highlight">In an Escalera</span> — The Red Ace holds a place in the sequence. If a player has the card the Ace is representing they can play it and move the Ace to either end of the sequence where it becomes the next card needed. Example: 10, Ace, Queen, King of Clubs — the Ace represents the Jack. If someone plays the Jack of Clubs the Ace moves to represent the 9 of Clubs.</p>
+        <p class="rules-text">Once you are down Red Aces can be played freely on the table.</p>
+        <p class="rules-text"><span class="rules-highlight">Black Aces</span> — Black Aces are not wild. They can only be used in a Trio of Aces or as the low Ace in an Escalera sequence (Ace, 2, 3, 4...).</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">Doblete</h3>
+        <p class="rules-text">A Doblete occurs when a player completes the contract and runs out of cards on the same turn — going down and going out simultaneously. When this happens the scorekeeper has the option to double all points for that round.</p>
+        <p class="rules-text">Example: The contract is 2 Escaleras. You have 2, 3, 4, 5, 6, 7 of Diamonds and 4, 5, 6, 7, 8 of Hearts with one card left to discard. You lay down both Escaleras completing the contract and discard your last card going out. That is a Doblete.</p>
+        <p class="rules-text">The player who goes out always scores 0 points so doubling does not affect the winner of the round — only the players who still had cards in their hands.</p>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-header">End of Round & Winning</h3>
+        <p class="rules-text">When a player goes out all remaining players count the points in their hands and the scorekeeper records the scores. Cards are collected and shuffled. The dealer role passes to the next player and the next contract begins.</p>
+        <p class="rules-text">After all 7 rounds are complete the player with the lowest total point score wins the game.</p>
+      </div>
+
+    </div>
+    <button id="close-rules-btn">Back to Game</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

@@ -15,12 +15,31 @@ let doubletes = [];
 let currentRound = 0;
 let seatOrder = [];
 let firstDealer = 0;
+let previousScreen = 'screen-setup';
 
 // ── Screen Switching ────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+
+// ── Rules Screen ────────────────────────────────────────────
+function openRules(fromScreen) {
+  previousScreen = fromScreen;
+  showScreen('screen-rules');
+}
+
+document.getElementById('rules-btn-setup').addEventListener('click', () => {
+  openRules('screen-setup');
+});
+
+document.getElementById('rules-btn-game').addEventListener('click', () => {
+  openRules('screen-game');
+});
+
+document.getElementById('close-rules-btn').addEventListener('click', () => {
+  showScreen(previousScreen);
+});
 
 // ── Setup Screen ────────────────────────────────────────────
 document.getElementById('add-player-btn').addEventListener('click', () => {
@@ -85,7 +104,6 @@ function buildSeatingList() {
     list.appendChild(row);
   });
 
-  // Sortable.js handles all drag and drop
   Sortable.create(list, {
     animation: 150,
     ghostClass: 'sortable-ghost',
@@ -139,11 +157,9 @@ function buildSeatingManageList() {
 }
 
 document.getElementById('confirm-seating-btn').addEventListener('click', () => {
-  // Read final seating order from DOM after dragging
   const rows = document.querySelectorAll('#seating-list .drag-row');
   seatOrder = [...rows].map(row => parseInt(row.dataset.playerIndex));
 
-  // Update firstDealer based on dealer select
   buildScoreboard();
   updateRoundTracker();
   updateDealerIndicator();
@@ -446,7 +462,6 @@ function openPlayerManagement() {
         return;
       }
       if (confirm(`Remove ${players[i]} from the game?`)) {
-        // Remove from seatOrder too
         seatOrder = seatOrder.filter(idx => idx !== i).map(idx => idx > i ? idx - 1 : idx);
         if (firstDealer >= seatOrder.length) firstDealer = 0;
         players.splice(i, 1);
@@ -492,7 +507,6 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
 });
 
 document.getElementById('done-managing-btn').addEventListener('click', () => {
-  // Save name edits
   const nameInputs = document.querySelectorAll('.manage-name-input');
   nameInputs.forEach(input => {
     const i = parseInt(input.dataset.playerIndex);
@@ -500,7 +514,6 @@ document.getElementById('done-managing-btn').addEventListener('click', () => {
     if (newName) players[i] = newName;
   });
 
-  // Save new seating order from drag list
   const seatingRows = document.querySelectorAll('#seating-manage-list .drag-row');
   if (seatingRows.length > 0) {
     seatOrder = [...seatingRows].map(row => parseInt(row.dataset.playerIndex));
