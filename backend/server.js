@@ -1,15 +1,13 @@
 // ── Dependencies ────────────────────────────────────────────
 const express = require('express');
 const cors = require('cors');
+const { pool, createTables } = require('./database');
 const app = express();
 const PORT = 3000;
 
 // ── Middleware ───────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-
-// ── In-Memory Storage (temporary until PostgreSQL) ───────────
-const games = {};
 
 // ── Helper — Generate Game Code ──────────────────────────────
 function generateCode() {
@@ -18,7 +16,7 @@ function generateCode() {
   for (let i = 0; i < 6; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
-  return games[code] ? generateCode() : code;
+  return code;
 }
 
 // ── Routes ───────────────────────────────────────────────────
@@ -29,7 +27,7 @@ app.get('/', (req, res) => {
 });
 
 // Create a new game
-app.post('/games', (req, res) => {
+app.post('/games', async (req, res) => {
   const { players } = req.body;
 
   if (!players || players.length < 2) {
@@ -37,46 +35,85 @@ app.post('/games', (req, res) => {
   }
 
   const code = generateCode();
-  games[code] = {
-    code,
-    players,
-    scores: players.map(() => []),
-    doubletes: [],
-    currentRound: 0,
-    seatOrder: players.map((_, i) => i),
-    firstDealer: 0,
-    createdAt: new Date()
-  };
+  const scores = players.map(() => []);
+  const doubletes = [];
+  const seatOrder = players.map((_, i) => i);
+  const firstDealer = 0;
+  const currentRound = 0;
 
-  res.json({ code, game: games[code] });
+  try {
+    const result = await pool.query(
+      `INSERT INTO games (code, players, scores, doubletes, current_round, seat_order, first_dealer)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [code, JSON.stringify(players), JSON.stringify(scores), JSON.stringify(doubletes), currentRound, JSON.stringify(seatOrder), firstDealer]
+    );
+    res.json({ code, game: result.rows[0] });
+  } catch (err) {
+    console.error('Error creating game:', err);
+    res.status(500).json({ error: 'Could not create game.' });
+  }
 });
 
 // Get a game by code
-app.get('/games/:code', (req, res) => {
-  const game = games[req.params.code.toUpperCase()];
-  if (!game) return res.status(404).json({ error: 'Game not found.' });
-  res.json(game);
+app.get('/games/:code', async (req, res) => {
+  const code = req.params.code.toUpperCase();
+  try {
+    const result = await pool.query('SELECT * FROM games WHERE code = $1', [code]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Game not found.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching game:', err);
+    res.status(500).json({ error: 'Could not fetch game.' });
+  }
 });
 
 // Update a game by code
-app.put('/games/:code', (req, res) => {
+app.put('/games/:code', async (req, res) => {
   const code = req.params.code.toUpperCase();
-  const game = games[code];
-  if (!game) return res.status(404).json({ error: 'Game not found.' });
+  const { players, scores, doubletes, current_round, seat_order, first_dealer } = req.body;
 
-  games[code] = { ...game, ...req.body, code };
-  res.json(games[code]);
+  try {
+    const result = await pool.query(
+      `UPDATE games
+       SET players = $1, scores = $2, doubletes = $3, current_round = $4, seat_order = $5, first_dealer = $6
+       WHERE code = $7
+       RETURNING *`,
+      [JSON.stringify(players), JSON.stringify(scores), JSON.stringify(doubletes), current_round, JSON.stringify(seat_order), first_dealer, code]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Game not found.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating game:', err);
+    res.status(500).json({ error: 'Could not update game.' });
+  }
 });
 
 // Delete a game by code
-app.delete('/games/:code', (req, res) => {
+app.delete('/games/:code', async (req, res) => {
   const code = req.params.code.toUpperCase();
-  if (!games[code]) return res.status(404).json({ error: 'Game not found.' });
-  delete games[code];
-  res.json({ message: `Game ${code} deleted.` });
+  try {
+    const result = await pool.query('DELETE FROM games WHERE code = $1 RETURNING *', [code]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Game not found.' });
+    }
+    res.json({ message: `Game ${code} deleted.` });
+  } catch (err) {
+    console.error('Error deleting game:', err);
+    res.status(500).json({ error: 'Could not delete game.' });
+  }
 });
 
 // ── Start Server ─────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  await createTables();
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
