@@ -571,3 +571,26 @@ button.secondary {
   color: #1a1a2e;
   margin-top: 8px;
 }
+
+/* ── Game Code Banner ── */
+#game-code-banner {
+  width: 100%;
+  background: #0f3460;
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #aaa;
+  display: none;
+}
+
+#game-code-banner.visible {
+  display: block;
+}
+
+#game-code-banner span {
+  color: #c9a84c;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}

@@ -9,6 +9,8 @@ const ROUNDS = [
   { number: 7, contract: "4 Escaleritas", short: "4E*" },
 ];
 
+const API_URL = 'http://localhost:3000';
+
 let players = [];
 let scores = [];
 let doubletes = [];
@@ -16,6 +18,46 @@ let currentRound = 0;
 let seatOrder = [];
 let firstDealer = 0;
 let previousScreen = 'screen-setup';
+let gameCode = null;
+
+// ── Server Communication ────────────────────────────────────
+async function createGameOnServer(players) {
+  try {
+    const response = await fetch(`${API_URL}/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ players })
+    });
+    const data = await response.json();
+    return data.code;
+  } catch (err) {
+    console.error('Could not reach server:', err);
+    return null;
+  }
+}
+
+async function updateGameOnServer() {
+  if (!gameCode) return;
+  try {
+    await fetch(`${API_URL}/games/${gameCode}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ players, scores, doubletes, currentRound, seatOrder, firstDealer })
+    });
+  } catch (err) {
+    console.error('Could not update server:', err);
+  }
+}
+
+function showGameCode(code) {
+  const banner = document.getElementById('game-code-banner');
+  if (code) {
+    banner.innerHTML = `Game Code: <span>${code}</span> — Share this with other players`;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
 
 // ── Screen Switching ────────────────────────────────────────
 function showScreen(id) {
@@ -71,6 +113,7 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
   currentRound = 0;
   seatOrder = players.map((_, i) => i);
   firstDealer = 0;
+  gameCode = null;
 
   openSeatingScreen();
 });
@@ -156,9 +199,16 @@ function buildSeatingManageList() {
   });
 }
 
-document.getElementById('confirm-seating-btn').addEventListener('click', () => {
+document.getElementById('confirm-seating-btn').addEventListener('click', async () => {
   const rows = document.querySelectorAll('#seating-list .drag-row');
   seatOrder = [...rows].map(row => parseInt(row.dataset.playerIndex));
+
+  // Try to create game on server
+  const code = await createGameOnServer(players);
+  if (code) {
+    gameCode = code;
+    showGameCode(code);
+  }
 
   buildScoreboard();
   updateRoundTracker();
@@ -423,6 +473,7 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
   refreshScoreRows();
   updateRoundTracker();
   saveState();
+  updateGameOnServer();
 
   if (currentRound >= ROUNDS.length) {
     document.getElementById('enter-scores-btn').textContent = 'See Final Results';
@@ -467,6 +518,7 @@ function openPlayerManagement() {
         players.splice(i, 1);
         scores.splice(i, 1);
         saveState();
+        updateGameOnServer();
         buildScoreboard();
         updateRoundTracker();
         openPlayerManagement();
@@ -501,6 +553,7 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
   seatOrder.push(newIndex);
 
   saveState();
+  updateGameOnServer();
   buildScoreboard();
   updateRoundTracker();
   openPlayerManagement();
@@ -520,6 +573,7 @@ document.getElementById('done-managing-btn').addEventListener('click', () => {
   }
 
   saveState();
+  updateGameOnServer();
   buildScoreboard();
   updateRoundTracker();
   showScreen('screen-game');
@@ -547,6 +601,7 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
   players = currentPlayers;
   seatOrder = currentPlayers.map((_, i) => i);
   firstDealer = 0;
+  gameCode = null;
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -560,6 +615,7 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
   });
 
   document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
+  showGameCode(null);
   clearState();
   showScreen('screen-setup');
 });
@@ -571,6 +627,7 @@ document.getElementById('fresh-start-btn').addEventListener('click', () => {
   currentRound = 0;
   seatOrder = [];
   firstDealer = 0;
+  gameCode = null;
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -584,6 +641,7 @@ document.getElementById('fresh-start-btn').addEventListener('click', () => {
   }
 
   document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
+  showGameCode(null);
   clearState();
   showScreen('screen-setup');
 });
@@ -637,7 +695,7 @@ function endGame() {
 
 // ── Save / Restore State ────────────────────────────────────
 function saveState() {
-  const state = { players, scores, doubletes, currentRound, seatOrder, firstDealer };
+  const state = { players, scores, doubletes, currentRound, seatOrder, firstDealer, gameCode };
   localStorage.setItem('continental_state', JSON.stringify(state));
 }
 
@@ -657,9 +715,11 @@ function loadState() {
     currentRound = state.currentRound;
     seatOrder = state.seatOrder || players.map((_, i) => i);
     firstDealer = state.firstDealer || 0;
+    gameCode = state.gameCode || null;
 
     buildScoreboard();
     updateRoundTracker();
+    showGameCode(gameCode);
 
     if (currentRound >= ROUNDS.length) {
       document.getElementById('enter-scores-btn').textContent = 'See Final Results';
