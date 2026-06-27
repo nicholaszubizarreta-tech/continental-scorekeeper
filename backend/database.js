@@ -2,18 +2,15 @@
 const { Pool } = require('pg');
 
 // ── Connection Pool ──────────────────────────────────────────
-// A pool manages multiple connections to the database
 const pool = new Pool({
-  user: 'postgres',       // default PostgreSQL user
-  host: 'localhost',      // database is on our own machine
-  database: 'continental', // the database we created in pgAdmin
-  password: 'postgres',   // the password you set during installation
-  port: 5432,             // default PostgreSQL port
+  user: 'postgres',
+  host: 'localhost',
+  database: 'continental',
+  password: 'postgres',
+  port: 5432,
 });
 
 // ── Create Tables ────────────────────────────────────────────
-// This runs when the server starts and creates the table if it
-// doesn't already exist. Safe to run multiple times.
 async function createTables() {
   const query = `
     CREATE TABLE IF NOT EXISTS games (
@@ -24,6 +21,8 @@ async function createTables() {
       current_round INTEGER NOT NULL DEFAULT 0,
       seat_order    JSON NOT NULL,
       first_dealer  INTEGER NOT NULL DEFAULT 0,
+      status        TEXT NOT NULL DEFAULT 'lobby',
+      claimed_by    JSON NOT NULL DEFAULT '[]',
       created_at    TIMESTAMP DEFAULT NOW()
     );
   `;

@@ -22,12 +22,12 @@
 
     <button id="add-player-btn">+ Add Player</button>
     <button id="start-game-btn">Start Game</button>
+    <button id="join-game-btn" class="secondary">Join Game</button>
     <button id="rules-btn-setup" class="secondary">Rules</button>
   </div>
 
   <!-- SCREEN 2: Scoreboard -->
   <div id="screen-game" class="screen">
-
     <div id="round-tracker">
       <div class="round-label">Round</div>
       <div id="round-dots"></div>
@@ -50,7 +50,6 @@
     <button id="manage-players-btn" class="secondary">Manage Players</button>
     <button id="rules-btn-game" class="secondary">Rules</button>
     <button id="new-game-midgame-btn" class="secondary">New Game</button>
-
   </div>
 
   <!-- SCREEN 3: Score Entry -->
@@ -224,6 +223,42 @@
 
     </div>
     <button id="close-rules-btn">Back to Game</button>
+  </div>
+
+  <!-- SCREEN 9: Join Game -->
+  <div id="screen-join" class="screen">
+    <h2>Join Game</h2>
+    <p class="subtitle">Enter the game code from the scorekeeper</p>
+    <input type="text" id="join-code-input" placeholder="Enter code" maxlength="6" style="text-transform: uppercase;" />
+    <button id="join-confirm-btn">Join</button>
+    <button id="join-cancel-btn" class="secondary">Cancel</button>
+  </div>
+
+  <!-- SCREEN 10: Claim Name (player picks their name) -->
+  <div id="screen-claim" class="screen">
+    <h2>Who are you?</h2>
+    <p class="subtitle">Tap your name to join the game</p>
+    <div id="claim-list"></div>
+    <button id="claim-cancel-btn" class="secondary">Cancel</button>
+  </div>
+
+  <!-- SCREEN 11: Lobby (scorekeeper sees who has joined) -->
+  <div id="screen-lobby" class="screen">
+    <h2>Game Lobby</h2>
+    <div id="lobby-code-display"></div>
+    <p class="subtitle">Waiting for players to join...</p>
+    <div id="lobby-player-list"></div>
+    <button id="lobby-start-btn">Start Game</button>
+    <button id="lobby-cancel-btn" class="secondary">Cancel</button>
+  </div>
+
+  <!-- SCREEN 12: Waiting (player waits for scorekeeper to start) -->
+  <div id="screen-waiting" class="screen">
+    <h2>Waiting for host...</h2>
+    <div id="waiting-code-display"></div>
+    <p class="subtitle">The scorekeeper will start the game shortly</p>
+    <div id="waiting-player-list"></div>
+    <button id="waiting-cancel-btn" class="secondary">Leave Game</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

@@ -19,6 +19,22 @@ let seatOrder = [];
 let firstDealer = 0;
 let previousScreen = 'screen-setup';
 let gameCode = null;
+let isSpectator = false;
+let pollInterval = null;
+let claimedBy = [];
+let myPlayerIndex = null;
+
+// ── Device ID ───────────────────────────────────────────────
+// Generate a unique ID for this device so we can track who claimed which name
+function getDeviceId() {
+  let id = localStorage.getItem('continental_device_id');
+  if (!id) {
+    id = 'device_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('continental_device_id', id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
 
 // ── Server Communication ────────────────────────────────────
 async function createGameOnServer(players) {
@@ -29,7 +45,7 @@ async function createGameOnServer(players) {
       body: JSON.stringify({ players })
     });
     const data = await response.json();
-    return data.code;
+    return data;
   } catch (err) {
     console.error('Could not reach server:', err);
     return null;
@@ -42,13 +58,79 @@ async function updateGameOnServer() {
     await fetch(`${API_URL}/games/${gameCode}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ players, scores, doubletes, currentRound, seatOrder, firstDealer })
+      body: JSON.stringify({
+        players,
+        scores,
+        doubletes,
+        current_round: currentRound,
+        seat_order: seatOrder,
+        first_dealer: firstDealer,
+        status: 'active',
+        claimed_by: claimedBy
+      })
     });
   } catch (err) {
     console.error('Could not update server:', err);
   }
 }
 
+async function claimPlayerOnServer(playerIndex) {
+  try {
+    const response = await fetch(`${API_URL}/games/${gameCode}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerIndex, deviceId: DEVICE_ID })
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      alert(data.error || 'Could not claim that name.');
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Could not claim player:', err);
+    return false;
+  }
+}
+
+async function startGameOnServer() {
+  try {
+    await fetch(`${API_URL}/games/${gameCode}/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (err) {
+    console.error('Could not start game on server:', err);
+  }
+}
+
+async function fetchGame(code) {
+  try {
+    const response = await fetch(`${API_URL}/games/${code}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    return null;
+  }
+}
+
+// ── Polling ─────────────────────────────────────────────────
+function startPolling(code, onUpdate) {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    const game = await fetchGame(code);
+    if (game) onUpdate(game);
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+}
+
+// ── Game Code Banner ────────────────────────────────────────
 function showGameCode(code) {
   const banner = document.getElementById('game-code-banner');
   if (code) {
@@ -57,6 +139,21 @@ function showGameCode(code) {
   } else {
     banner.classList.remove('visible');
   }
+}
+
+// ── Spectator / Scorekeeper Mode ────────────────────────────
+function showSpectatorMode() {
+  document.getElementById('enter-scores-btn').style.display = 'none';
+  document.getElementById('manage-players-btn').style.display = 'none';
+  document.getElementById('new-game-midgame-btn').style.display = 'none';
+  document.getElementById('rules-btn-game').style.display = 'none';
+}
+
+function showScorekeeperMode() {
+  document.getElementById('enter-scores-btn').style.display = '';
+  document.getElementById('manage-players-btn').style.display = '';
+  document.getElementById('new-game-midgame-btn').style.display = '';
+  document.getElementById('rules-btn-game').style.display = '';
 }
 
 // ── Screen Switching ────────────────────────────────────────
@@ -71,17 +168,242 @@ function openRules(fromScreen) {
   showScreen('screen-rules');
 }
 
-document.getElementById('rules-btn-setup').addEventListener('click', () => {
-  openRules('screen-setup');
+document.getElementById('rules-btn-setup').addEventListener('click', () => openRules('screen-setup'));
+document.getElementById('rules-btn-game').addEventListener('click', () => openRules('screen-game'));
+document.getElementById('close-rules-btn').addEventListener('click', () => showScreen(previousScreen));
+
+// ── Join Game Screen ────────────────────────────────────────
+document.getElementById('join-game-btn').addEventListener('click', () => {
+  document.getElementById('join-code-input').value = '';
+  showScreen('screen-join');
 });
 
-document.getElementById('rules-btn-game').addEventListener('click', () => {
-  openRules('screen-game');
+document.getElementById('join-cancel-btn').addEventListener('click', () => {
+  showScreen('screen-setup');
 });
 
-document.getElementById('close-rules-btn').addEventListener('click', () => {
-  showScreen(previousScreen);
+document.getElementById('join-confirm-btn').addEventListener('click', async () => {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code || code.length < 4) {
+    alert('Please enter a valid game code.');
+    return;
+  }
+  await handleJoinCode(code);
 });
+
+document.getElementById('join-code-input').addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+    if (code) await handleJoinCode(code);
+  }
+});
+
+async function handleJoinCode(code) {
+  const game = await fetchGame(code);
+  if (!game) {
+    alert('Game not found. Check the code and try again.');
+    return;
+  }
+
+  gameCode = code;
+  players = game.players;
+  scores = game.scores;
+  doubletes = game.doubletes;
+  currentRound = game.current_round;
+  seatOrder = game.seat_order;
+  firstDealer = game.first_dealer;
+  claimedBy = game.claimed_by || players.map(() => null);
+
+  // Check if this device already claimed a name
+  myPlayerIndex = claimedBy.findIndex(id => id === DEVICE_ID);
+
+  if (game.status === 'active') {
+    // Game already started — go straight to spectator scoreboard
+    isSpectator = myPlayerIndex === -1;
+    buildScoreboard();
+    updateRoundTracker();
+    showGameCode(gameCode);
+    if (isSpectator) showSpectatorMode();
+    else showScorekeeperMode();
+    showScreen('screen-game');
+    startPolling(code, onSpectatorUpdate);
+  } else {
+    // Game in lobby — show claim screen
+    buildClaimScreen();
+    showScreen('screen-claim');
+  }
+}
+
+// ── Claim Name Screen ───────────────────────────────────────
+function buildClaimScreen() {
+  const list = document.getElementById('claim-list');
+  list.innerHTML = '';
+
+  players.forEach((name, i) => {
+    const option = document.createElement('div');
+    const isTaken = claimedBy[i] && claimedBy[i] !== DEVICE_ID;
+    const isMine = claimedBy[i] === DEVICE_ID;
+
+    option.className = 'claim-option' + (isTaken ? ' taken' : '');
+    option.textContent = name;
+
+    if (isMine) {
+      option.style.borderColor = '#c9a84c';
+      option.style.color = '#c9a84c';
+      const label = document.createElement('span');
+      label.className = 'claim-taken-label';
+      label.style.color = '#c9a84c';
+      label.textContent = 'You';
+      option.appendChild(label);
+    } else if (isTaken) {
+      const label = document.createElement('span');
+      label.className = 'claim-taken-label';
+      label.textContent = 'Taken';
+      option.appendChild(label);
+    }
+
+    if (!isTaken) {
+      option.addEventListener('click', async () => {
+        const success = await claimPlayerOnServer(i);
+        if (success) {
+          myPlayerIndex = i;
+          claimedBy[i] = DEVICE_ID;
+          isSpectator = false;
+          // Go to waiting screen
+          buildWaitingScreen();
+          showScreen('screen-waiting');
+          // Poll waiting for game to start
+          startPolling(gameCode, onWaitingUpdate);
+        }
+      });
+    }
+
+    list.appendChild(option);
+  });
+}
+
+document.getElementById('claim-cancel-btn').addEventListener('click', () => {
+  stopPolling();
+  gameCode = null;
+  showScreen('screen-setup');
+});
+
+// ── Waiting Screen ──────────────────────────────────────────
+function buildWaitingScreen() {
+  document.getElementById('waiting-code-display').innerHTML =
+    `Game Code<span>${gameCode}</span>`;
+
+  const list = document.getElementById('waiting-player-list');
+  list.innerHTML = '';
+
+  players.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'lobby-player-row';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'lobby-player-name';
+    nameEl.textContent = name;
+
+    const status = document.createElement('div');
+    const hasJoined = claimedBy[i] !== null && claimedBy[i] !== undefined;
+    status.className = 'lobby-player-status ' + (hasJoined ? 'joined' : 'waiting');
+    status.textContent = hasJoined ? 'Joined' : 'Waiting';
+
+    row.appendChild(nameEl);
+    row.appendChild(status);
+    list.appendChild(row);
+  });
+}
+
+function onWaitingUpdate(game) {
+  claimedBy = game.claimed_by || claimedBy;
+  players = game.players;
+  buildWaitingScreen();
+
+  // When scorekeeper starts the game move to scoreboard
+  if (game.status === 'active') {
+    stopPolling();
+    scores = game.scores;
+    doubletes = game.doubletes;
+    currentRound = game.current_round;
+    seatOrder = game.seat_order;
+    firstDealer = game.first_dealer;
+    isSpectator = true;
+    buildScoreboard();
+    updateRoundTracker();
+    showGameCode(gameCode);
+    showSpectatorMode();
+    showScreen('screen-game');
+    startPolling(gameCode, onSpectatorUpdate);
+  }
+}
+
+document.getElementById('waiting-cancel-btn').addEventListener('click', () => {
+  stopPolling();
+  gameCode = null;
+  myPlayerIndex = null;
+  isSpectator = false;
+  showScreen('screen-setup');
+});
+
+// ── Lobby Screen (scorekeeper) ──────────────────────────────
+function buildLobbyScreen() {
+  document.getElementById('lobby-code-display').innerHTML =
+    `Share this code with players<span>${gameCode}</span>`;
+
+  const list = document.getElementById('lobby-player-list');
+  list.innerHTML = '';
+
+  players.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'lobby-player-row';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'lobby-player-name';
+    nameEl.textContent = name;
+
+    const status = document.createElement('div');
+    const hasJoined = claimedBy[i] !== null && claimedBy[i] !== undefined;
+    status.className = 'lobby-player-status ' + (hasJoined ? 'joined' : 'waiting');
+    status.textContent = hasJoined ? 'Joined' : 'Waiting';
+
+    row.appendChild(nameEl);
+    row.appendChild(status);
+    list.appendChild(row);
+  });
+}
+
+function onLobbyUpdate(game) {
+  claimedBy = game.claimed_by || claimedBy;
+  buildLobbyScreen();
+}
+
+document.getElementById('lobby-start-btn').addEventListener('click', async () => {
+  stopPolling();
+  await startGameOnServer();
+  openSeatingScreen();
+});
+
+document.getElementById('lobby-cancel-btn').addEventListener('click', () => {
+  stopPolling();
+  gameCode = null;
+  players = [];
+  scores = [];
+  doubletes = [];
+  currentRound = 0;
+  claimedBy = [];
+  showScreen('screen-setup');
+});
+
+// ── Spectator Update ────────────────────────────────────────
+function onSpectatorUpdate(game) {
+  players = game.players;
+  scores = game.scores;
+  doubletes = game.doubletes;
+  currentRound = game.current_round;
+  buildScoreboard();
+  updateRoundTracker();
+}
 
 // ── Setup Screen ────────────────────────────────────────────
 document.getElementById('add-player-btn').addEventListener('click', () => {
@@ -95,7 +417,7 @@ document.getElementById('add-player-btn').addEventListener('click', () => {
   container.appendChild(input);
 });
 
-document.getElementById('start-game-btn').addEventListener('click', () => {
+document.getElementById('start-game-btn').addEventListener('click', async () => {
   const inputs = document.querySelectorAll('.player-input');
   players = [];
   inputs.forEach(input => {
@@ -114,8 +436,22 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
   seatOrder = players.map((_, i) => i);
   firstDealer = 0;
   gameCode = null;
+  isSpectator = false;
+  myPlayerIndex = null;
+  stopPolling();
 
-  openSeatingScreen();
+  // Create game on server and go to lobby
+  const result = await createGameOnServer(players);
+  if (result && result.code) {
+    gameCode = result.code;
+    claimedBy = players.map(() => null);
+    buildLobbyScreen();
+    showScreen('screen-lobby');
+    startPolling(gameCode, onLobbyUpdate);
+  } else {
+    // No server — go straight to seating
+    openSeatingScreen();
+  }
 });
 
 // ── Seating Screen ──────────────────────────────────────────
@@ -203,18 +539,15 @@ document.getElementById('confirm-seating-btn').addEventListener('click', async (
   const rows = document.querySelectorAll('#seating-list .drag-row');
   seatOrder = [...rows].map(row => parseInt(row.dataset.playerIndex));
 
-  // Try to create game on server
-  const code = await createGameOnServer(players);
-  if (code) {
-    gameCode = code;
-    showGameCode(code);
-  }
-
+  isSpectator = false;
+  showScorekeeperMode();
+  showGameCode(gameCode);
   buildScoreboard();
   updateRoundTracker();
   updateDealerIndicator();
-  showScreen('screen-game');
   saveState();
+  await updateGameOnServer();
+  showScreen('screen-game');
 });
 
 // ── Dealer Indicator ────────────────────────────────────────
@@ -342,9 +675,11 @@ function updateRoundTracker() {
 
     if (index < currentRound) {
       dot.classList.add('completed');
-      dot.style.cursor = 'pointer';
-      dot.title = `Edit Round ${index + 1}`;
-      dot.addEventListener('click', () => openEntryScreen(index));
+      if (!isSpectator) {
+        dot.style.cursor = 'pointer';
+        dot.title = `Edit Round ${index + 1}`;
+        dot.addEventListener('click', () => openEntryScreen(index));
+      }
     } else if (index === currentRound) {
       dot.classList.add('current');
     }
@@ -442,7 +777,7 @@ document.getElementById('enter-scores-btn').addEventListener('click', () => {
   openEntryScreen(currentRound);
 });
 
-document.getElementById('save-scores-btn').addEventListener('click', () => {
+document.getElementById('save-scores-btn').addEventListener('click', async () => {
   const inputs = document.querySelectorAll('.entry-input');
   let valid = true;
 
@@ -473,7 +808,7 @@ document.getElementById('save-scores-btn').addEventListener('click', () => {
   refreshScoreRows();
   updateRoundTracker();
   saveState();
-  updateGameOnServer();
+  await updateGameOnServer();
 
   if (currentRound >= ROUNDS.length) {
     document.getElementById('enter-scores-btn').textContent = 'See Final Results';
@@ -515,6 +850,7 @@ function openPlayerManagement() {
       if (confirm(`Remove ${players[i]} from the game?`)) {
         seatOrder = seatOrder.filter(idx => idx !== i).map(idx => idx > i ? idx - 1 : idx);
         if (firstDealer >= seatOrder.length) firstDealer = 0;
+        claimedBy.splice(i, 1);
         players.splice(i, 1);
         scores.splice(i, 1);
         saveState();
@@ -544,6 +880,7 @@ document.getElementById('add-midgame-player-btn').addEventListener('click', () =
 
   const newIndex = players.length;
   players.push(name.trim());
+  claimedBy.push(null);
 
   const newScores = [];
   for (let i = 0; i < currentRound; i++) {
@@ -581,16 +918,12 @@ document.getElementById('done-managing-btn').addEventListener('click', () => {
 
 // ── New Game Confirmation ───────────────────────────────────
 function goToNewGameScreen() {
+  stopPolling();
   showScreen('screen-newgame');
 }
 
-document.getElementById('new-game-midgame-btn').addEventListener('click', () => {
-  goToNewGameScreen();
-});
-
-document.getElementById('new-game-btn').addEventListener('click', () => {
-  goToNewGameScreen();
-});
+document.getElementById('new-game-midgame-btn').addEventListener('click', () => goToNewGameScreen());
+document.getElementById('new-game-btn').addEventListener('click', () => goToNewGameScreen());
 
 document.getElementById('keep-players-btn').addEventListener('click', () => {
   const currentPlayers = [...players];
@@ -602,6 +935,10 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
   seatOrder = currentPlayers.map((_, i) => i);
   firstDealer = 0;
   gameCode = null;
+  isSpectator = false;
+  claimedBy = [];
+  myPlayerIndex = null;
+  stopPolling();
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -616,6 +953,7 @@ document.getElementById('keep-players-btn').addEventListener('click', () => {
 
   document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
   showGameCode(null);
+  showScorekeeperMode();
   clearState();
   showScreen('screen-setup');
 });
@@ -628,6 +966,10 @@ document.getElementById('fresh-start-btn').addEventListener('click', () => {
   seatOrder = [];
   firstDealer = 0;
   gameCode = null;
+  isSpectator = false;
+  claimedBy = [];
+  myPlayerIndex = null;
+  stopPolling();
 
   const container = document.getElementById('player-inputs');
   container.innerHTML = '';
@@ -642,6 +984,7 @@ document.getElementById('fresh-start-btn').addEventListener('click', () => {
 
   document.getElementById('enter-scores-btn').textContent = 'Enter Round Scores';
   showGameCode(null);
+  showScorekeeperMode();
   clearState();
   showScreen('screen-setup');
 });
@@ -651,6 +994,7 @@ document.getElementById('cancel-newgame-btn').addEventListener('click', () => {
     buildGameOverScreen();
     showScreen('screen-gameover');
   } else {
+    if (isSpectator && gameCode) startPolling(gameCode, onSpectatorUpdate);
     showScreen('screen-game');
   }
 });
@@ -688,6 +1032,7 @@ function buildGameOverScreen() {
 }
 
 function endGame() {
+  stopPolling();
   buildGameOverScreen();
   showScreen('screen-gameover');
   clearState();
@@ -695,7 +1040,7 @@ function endGame() {
 
 // ── Save / Restore State ────────────────────────────────────
 function saveState() {
-  const state = { players, scores, doubletes, currentRound, seatOrder, firstDealer, gameCode };
+  const state = { players, scores, doubletes, currentRound, seatOrder, firstDealer, gameCode, claimedBy };
   localStorage.setItem('continental_state', JSON.stringify(state));
 }
 
@@ -716,10 +1061,13 @@ function loadState() {
     seatOrder = state.seatOrder || players.map((_, i) => i);
     firstDealer = state.firstDealer || 0;
     gameCode = state.gameCode || null;
+    claimedBy = state.claimedBy || players.map(() => null);
+    isSpectator = false;
 
     buildScoreboard();
     updateRoundTracker();
     showGameCode(gameCode);
+    showScorekeeperMode();
 
     if (currentRound >= ROUNDS.length) {
       document.getElementById('enter-scores-btn').textContent = 'See Final Results';
