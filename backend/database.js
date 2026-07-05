@@ -14,16 +14,19 @@ const pool = new Pool({
 async function createTables() {
   const query = `
     CREATE TABLE IF NOT EXISTS games (
-      code          TEXT PRIMARY KEY,
-      players       JSON NOT NULL,
-      scores        JSON NOT NULL,
-      doubletes     JSON NOT NULL,
-      current_round INTEGER NOT NULL DEFAULT 0,
-      seat_order    JSON NOT NULL,
-      first_dealer  INTEGER NOT NULL DEFAULT 0,
-      status        TEXT NOT NULL DEFAULT 'lobby',
-      claimed_by    JSON NOT NULL DEFAULT '[]',
-      created_at    TIMESTAMP DEFAULT NOW()
+      code             TEXT PRIMARY KEY,
+      players          JSON NOT NULL,
+      scores           JSON NOT NULL,
+      doubletes        JSON NOT NULL,
+      current_round    INTEGER NOT NULL DEFAULT 0,
+      seat_order       JSON NOT NULL,
+      first_dealer     INTEGER NOT NULL DEFAULT 0,
+      status           TEXT NOT NULL DEFAULT 'lobby',
+      claimed_by       JSON NOT NULL DEFAULT '[]',
+      scorekeeper_id   TEXT,
+      round_scores     JSON NOT NULL DEFAULT '[]',
+      round_submitted  JSON NOT NULL DEFAULT '[]',
+      created_at       TIMESTAMP DEFAULT NOW()
     );
   `;
 
