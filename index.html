@@ -8,22 +8,30 @@
 </head>
 <body>
 
+  <!-- SCREEN 0: Main Menu -->
+  <div id="screen-main-menu" class="screen active">
+    <h1>Continental</h1>
+    <p class="subtitle">Choose your mode</p>
+    <button id="mode-scorekeeper-btn">🎯 Scorekeeper</button>
+    <button id="mode-play-btn">🃏 Play Continental</button>
+    <button id="mode-rules-btn" class="secondary">Rules</button>
+  </div>
+
   <!-- SCREEN 1: Setup -->
-  <div id="screen-setup" class="screen active">
+  <div id="screen-setup" class="screen">
     <h1>Continental</h1>
     <p class="subtitle">Enter player names to start</p>
-
     <div id="player-inputs">
       <input type="text" class="player-input" placeholder="Player 1" maxlength="20" />
       <input type="text" class="player-input" placeholder="Player 2" maxlength="20" />
       <input type="text" class="player-input" placeholder="Player 3" maxlength="20" />
       <input type="text" class="player-input" placeholder="Player 4" maxlength="20" />
     </div>
-
     <button id="add-player-btn">+ Add Player</button>
     <button id="start-game-btn">Start Game</button>
     <button id="join-game-btn" class="secondary">Join Game</button>
     <button id="rules-btn-setup" class="secondary">Rules</button>
+    <button id="main-menu-btn-setup" class="secondary">Main Menu</button>
   </div>
 
   <!-- SCREEN 2: Scoreboard -->
@@ -33,38 +41,33 @@
       <div id="round-dots"></div>
       <div id="round-contract"></div>
     </div>
-
     <div id="game-code-banner"></div>
-
+    <div id="role-indicator"></div>
     <table id="scoreboard">
-      <thead>
-        <tr id="header-row"></tr>
-      </thead>
+      <thead><tr id="header-row"></tr></thead>
       <tbody id="score-rows"></tbody>
-      <tfoot>
-        <tr id="total-row"></tr>
-      </tfoot>
+      <tfoot><tr id="total-row"></tr></tfoot>
     </table>
-
     <button id="enter-scores-btn">Enter Round Scores</button>
+    <button id="end-round-btn">End Round</button>
     <button id="manage-players-btn" class="secondary">Manage Players</button>
     <button id="rules-btn-game" class="secondary">Rules</button>
     <button id="new-game-midgame-btn" class="secondary">New Game</button>
+    <button id="leave-game-btn" class="secondary">Leave Game</button>
+    <button id="main-menu-btn-game" class="secondary">Main Menu</button>
   </div>
 
-  <!-- SCREEN 3: Score Entry -->
+  <!-- SCREEN 3: Score Entry (local scorekeeper) -->
   <div id="screen-entry" class="screen">
     <h2 id="entry-title"></h2>
     <p id="entry-contract"></p>
     <div id="entry-inputs"></div>
-
     <div id="doblete-row">
       <label class="doblete-label">
         <input type="checkbox" id="doblete-checkbox" />
         Doblete — double all scores this round
       </label>
     </div>
-
     <button id="save-scores-btn">Save Scores</button>
     <button id="cancel-entry-btn" class="secondary">Cancel</button>
   </div>
@@ -110,117 +113,73 @@
   <div id="screen-rules" class="screen">
     <h1>Rules</h1>
     <div id="rules-content">
-
       <div class="rules-section">
         <h3 class="rules-header">Overview</h3>
         <p class="rules-text">Continental is a card game where players try to complete contracts and run out of cards, forcing other players to score points. The game is played over 7 rounds, each with a different contract. At the end of all 7 rounds the player with the least points wins.</p>
         <p class="rules-text">The game can use one or more decks depending on the number of players. More players means more decks.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Setup</h3>
         <p class="rules-text">At the beginning of each round the cards are shuffled by the dealer. Each player is dealt 11 cards. The remaining cards form the draw pile in the middle of the table. The top card is flipped face up to start the discard pile. The contract for the round is announced so all players know what they need to complete.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Card Values</h3>
         <p class="rules-text">Cards are worth points based on their face value. Points left in your hand when someone goes out count against you.</p>
         <div class="rules-table">
-          <div class="rules-table-row">
-            <span class="rules-table-label">2 – 10</span>
-            <span class="rules-table-value">Worth their number (2 = 2pts, 10 = 10pts)</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Face Cards</span>
-            <span class="rules-table-value">10 points each (Jack, Queen, King)</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">All Aces</span>
-            <span class="rules-table-value">20 points each</span>
-          </div>
+          <div class="rules-table-row"><span class="rules-table-label">2 – 10</span><span class="rules-table-value">Worth their number (2 = 2pts, 10 = 10pts)</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Face Cards</span><span class="rules-table-value">10 points each (Jack, Queen, King)</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">All Aces</span><span class="rules-table-value">20 points each</span></div>
         </div>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Trios, Escaleras & Escalaritas</h3>
         <p class="rules-text"><span class="rules-highlight">Trio</span> — A set of three cards of the same number across any suits. Example: 3 of Hearts, 3 of Diamonds, 3 of Spades.</p>
         <p class="rules-text"><span class="rules-highlight">Escalera</span> — A sequence of four or more cards of the same suit in order. Example: Ace, 2, 3, 4 of Clubs.</p>
         <p class="rules-text"><span class="rules-highlight">Escalarita</span> — A mini Escalera of exactly three cards of the same suit in order. Example: Ace, 2, 3 of Diamonds. Used only in Round 7.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Contracts</h3>
         <p class="rules-text">Each round has a required contract that must be completed to go down.</p>
         <div class="rules-table">
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 1</span>
-            <span class="rules-table-value">1 Trio + 1 Escalera</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 2</span>
-            <span class="rules-table-value">2 Escaleras</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 3</span>
-            <span class="rules-table-value">3 Trios</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 4</span>
-            <span class="rules-table-value">2 Trios + 1 Escalera</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 5</span>
-            <span class="rules-table-value">1 Trio + 2 Escaleras</span>
-          </div>
-          <div class="rules-table-row">
-            <span class="rules-table-label">Round 6</span>
-            <span class="rules-table-value">3 Escaleras</span>
-          </div>
-          <div class="rules-table-row rules-table-row-highlight">
-            <span class="rules-table-label">Round 7</span>
-            <span class="rules-table-value">4 Escalaritas ★</span>
-          </div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 1</span><span class="rules-table-value">1 Trio + 1 Escalera</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 2</span><span class="rules-table-value">2 Escaleras</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 3</span><span class="rules-table-value">3 Trios</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 4</span><span class="rules-table-value">2 Trios + 1 Escalera</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 5</span><span class="rules-table-value">1 Trio + 2 Escaleras</span></div>
+          <div class="rules-table-row"><span class="rules-table-label">Round 6</span><span class="rules-table-value">3 Escaleras</span></div>
+          <div class="rules-table-row rules-table-row-highlight"><span class="rules-table-label">Round 7</span><span class="rules-table-value">4 Escalaritas ★</span></div>
         </div>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">On Your Turn</h3>
         <p class="rules-text">Play passes to the left starting with the player after the dealer. On your turn you must first draw a card — either from the top of the draw pile or the top of the discard pile.</p>
         <p class="rules-text"><span class="rules-highlight">Drawing from the draw pile</span> — Before you continue your turn, going around the table from the next player, each person may claim the top card of the discard pile. Priority goes to the player closest to whoever just drew. If you discard before anyone claims the card it becomes dead in the discard pile.</p>
         <p class="rules-text"><span class="rules-highlight">After drawing</span> — Check if you have completed the round contract. If not, discard a card and your turn ends. If you have completed the contract you may go down.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Going Down</h3>
-        <p class="rules-text">When you have completed the round contract you lay your Trios and Escaleras face up on the table in front of you. These cards are now part of the game and visible to everyone.</p>
-        <p class="rules-text">Once you are down you can no longer take from the discard pile — you must draw from the draw pile only. You may now play cards onto anyone's Trios or Escaleras on the table to empty your hand.</p>
-        <p class="rules-text">Players who have not yet gone down cannot play on the table but can still draw from the discard pile. Going out means running out of cards entirely — everyone else scores points for the cards left in their hands.</p>
+        <p class="rules-text">When you have completed the round contract you lay your Trios and Escaleras face up on the table in front of you.</p>
+        <p class="rules-text">Once you are down you can no longer take from the discard pile. You may now play cards onto anyone's Trios or Escaleras on the table to empty your hand.</p>
         <p class="rules-text"><span class="rules-highlight">Playing on Trios</span> — Add any card of the same number to someone's Trio.</p>
-        <p class="rules-text"><span class="rules-highlight">Playing on Escaleras</span> — You must extend the sequence. If the Escalera is Ace through 4 of Hearts you need the 5 of Hearts to play on it.</p>
+        <p class="rules-text"><span class="rules-highlight">Playing on Escaleras</span> — You must extend the sequence in order.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Red Aces — Wild Cards</h3>
         <p class="rules-text">Red Aces (Hearts and Diamonds) are wild cards and can stand in for any card in a Trio or Escalera.</p>
         <p class="rules-text"><span class="rules-highlight">In a Trio</span> — The Red Ace acts as the matching number.</p>
-        <p class="rules-text"><span class="rules-highlight">In an Escalera</span> — The Red Ace holds a place in the sequence. If a player has the card the Ace is representing they can play it and move the Ace to either end of the sequence where it becomes the next card needed. Example: 10, Ace, Queen, King of Clubs — the Ace represents the Jack. If someone plays the Jack of Clubs the Ace moves to represent the 9 of Clubs.</p>
-        <p class="rules-text">Once you are down Red Aces can be played freely on the table.</p>
-        <p class="rules-text"><span class="rules-highlight">Black Aces</span> — Black Aces are not wild. They can only be used in a Trio of Aces or as the low Ace in an Escalera sequence (Ace, 2, 3, 4...).</p>
+        <p class="rules-text"><span class="rules-highlight">In an Escalera</span> — The Red Ace holds a place in the sequence. If a player has the card the Ace is representing they can play it and move the Ace to either end of the sequence.</p>
+        <p class="rules-text"><span class="rules-highlight">Black Aces</span> — Not wild. Can only be used in a Trio of Aces or as the low Ace in a sequence (Ace, 2, 3, 4...).</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">Doblete</h3>
-        <p class="rules-text">A Doblete occurs when a player completes the contract and runs out of cards on the same turn — going down and going out simultaneously. When this happens the scorekeeper has the option to double all points for that round.</p>
-        <p class="rules-text">Example: The contract is 2 Escaleras. You have 2, 3, 4, 5, 6, 7 of Diamonds and 4, 5, 6, 7, 8 of Hearts with one card left to discard. You lay down both Escaleras completing the contract and discard your last card going out. That is a Doblete.</p>
-        <p class="rules-text">The player who goes out always scores 0 points so doubling does not affect the winner of the round — only the players who still had cards in their hands.</p>
+        <p class="rules-text">A Doblete occurs when a player completes the contract and runs out of cards on the same turn. When this happens the scorekeeper has the option to double all points for that round.</p>
+        <p class="rules-text">The player who goes out always scores 0 points so doubling does not affect the winner of the round.</p>
       </div>
-
       <div class="rules-section">
         <h3 class="rules-header">End of Round & Winning</h3>
-        <p class="rules-text">When a player goes out all remaining players count the points in their hands and the scorekeeper records the scores. Cards are collected and shuffled. The dealer role passes to the next player and the next contract begins.</p>
+        <p class="rules-text">When a player goes out all remaining players count the points in their hands. Cards are collected and shuffled. The dealer role passes to the next player.</p>
         <p class="rules-text">After all 7 rounds are complete the player with the lowest total point score wins the game.</p>
       </div>
-
     </div>
     <button id="close-rules-btn">Back to Game</button>
   </div>
@@ -234,15 +193,16 @@
     <button id="join-cancel-btn" class="secondary">Cancel</button>
   </div>
 
-  <!-- SCREEN 10: Claim Name (player picks their name) -->
+  <!-- SCREEN 10: Claim Name -->
   <div id="screen-claim" class="screen">
     <h2>Who are you?</h2>
     <p class="subtitle">Tap your name to join the game</p>
     <div id="claim-list"></div>
+    <button id="claim-skip-btn" class="secondary">Join as Spectator</button>
     <button id="claim-cancel-btn" class="secondary">Cancel</button>
   </div>
 
-  <!-- SCREEN 11: Lobby (scorekeeper sees who has joined) -->
+  <!-- SCREEN 11: Lobby (scorekeeper) -->
   <div id="screen-lobby" class="screen">
     <h2>Game Lobby</h2>
     <div id="lobby-code-display"></div>
@@ -252,13 +212,100 @@
     <button id="lobby-cancel-btn" class="secondary">Cancel</button>
   </div>
 
-  <!-- SCREEN 12: Waiting (player waits for scorekeeper to start) -->
+  <!-- SCREEN 12: Waiting (player) -->
   <div id="screen-waiting" class="screen">
     <h2>Waiting for host...</h2>
     <div id="waiting-code-display"></div>
     <p class="subtitle">The scorekeeper will start the game shortly</p>
     <div id="waiting-player-list"></div>
     <button id="waiting-cancel-btn" class="secondary">Leave Game</button>
+  </div>
+
+  <!-- SCREEN 13: End Round (scorekeeper marks doblete) -->
+  <div id="screen-end-round" class="screen">
+    <h2 id="end-round-title"></h2>
+    <p class="subtitle">Was this round a Doblete?</p>
+    <div id="doblete-end-row">
+      <label class="doblete-label">
+        <input type="checkbox" id="end-round-doblete" />
+        Doblete — double all scores this round
+      </label>
+    </div>
+    <p class="subtitle" style="margin-top: 8px;">Players will now submit their scores on their own devices. You can also enter scores manually below.</p>
+    <button id="confirm-end-round-btn">End Round & Notify Players</button>
+    <button id="cancel-end-round-btn" class="secondary">Cancel</button>
+  </div>
+
+  <!-- SCREEN 14: Score Collection (scorekeeper watches scores come in) -->
+  <div id="screen-collecting" class="screen">
+    <h2 id="collecting-title"></h2>
+    <p class="subtitle">Waiting for players to submit scores</p>
+    <div id="collecting-list"></div>
+    <button id="next-round-btn">Save All &amp; Next Round</button>
+  </div>
+
+  <!-- SCREEN 15: Player Score Submit -->
+  <div id="screen-submit" class="screen">
+    <h2 id="submit-title"></h2>
+    <p id="submit-contract"></p>
+    <p class="subtitle">Enter your score for this round</p>
+    <div id="submit-input-row" class="entry-row" style="justify-content: center;">
+      <input type="number" id="submit-score-input" class="entry-input" min="0" placeholder="0" style="width: 120px; font-size: 1.4rem;" />
+    </div>
+    <button id="submit-score-btn">Submit Score</button>
+    <p class="subtitle" style="margin-top: 8px; font-size: 0.8rem;">Waiting for scorekeeper to advance the round after all scores are in.</p>
+  </div>
+
+  <!-- SCREEN: Play Continental Game -->
+  <div id="screen-play" class="screen">
+
+    <!-- Top Bar -->
+    <div id="play-top-bar">
+      <div id="play-round-info">Round 1 — 1T 1E</div>
+      <div id="play-turn-info">Your Turn</div>
+    </div>
+
+    <!-- Opponent Areas -->
+    <div id="play-opponents"></div>
+
+    <!-- Table Center -->
+    <div id="play-table">
+      <div id="play-contracts-area"></div>
+      <div id="play-center">
+        <div id="play-deck">
+          <div class="card-back">🂠</div>
+          <div class="pile-label">Draw</div>
+        </div>
+        <div id="play-discard">
+          <div class="empty-pile">Empty</div>
+          <div class="pile-label">Discard</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Your Field -->
+    <div id="play-field">
+      <div class="field-label">Your Field</div>
+      <div id="play-field-cards"></div>
+    </div>
+
+    <!-- Your Hand -->
+    <div id="play-hand">
+      <div class="hand-label">Your Hand</div>
+      <div id="play-hand-cards"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="play-actions">
+      <button id="play-draw-btn" class="action-btn">Draw</button>
+      <button id="play-discard-btn" class="action-btn" disabled>Discard</button>
+      <button id="play-godown-btn" class="action-btn" disabled>Go Down</button>
+      <button id="play-endturn-btn" class="action-btn" disabled>End Turn</button>
+    </div>
+
+    <!-- Back to Menu -->
+    <button id="play-menu-btn" class="secondary" style="margin-top: 8px;">Main Menu</button>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
