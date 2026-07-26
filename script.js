@@ -264,8 +264,8 @@ document.getElementById('main-menu-btn-game').addEventListener('click', () => {
 });
 
 document.getElementById('mode-play-btn').addEventListener('click', () => {
+  startNewGame();
   showScreen('screen-play');
-  testRenderCards();
 });
 
 document.getElementById('play-menu-btn').addEventListener('click', () => {
@@ -1398,38 +1398,271 @@ let gameState = {
   phase: 'draw',
 };
 
-// Quick test — render a few cards on the play screen to verify visuals
-function testRenderCards() {
-  const hand = document.getElementById('play-hand-cards');
-  if (!hand) return;
-  hand.innerHTML = '';
-  const testCards = [
-    { suit: 'hearts',   symbol: '♥', color: 'red',   value: 'A',  display: 'A',  points: 20, isWild: true,  id: 'test1' },
-    { suit: 'spades',   symbol: '♠', color: 'black', value: 'K',  display: 'K',  points: 10, isWild: false, id: 'test2' },
-    { suit: 'diamonds', symbol: '♦', color: 'red',   value: '7',  display: '7',  points: 7,  isWild: false, id: 'test3' },
-    { suit: 'clubs',    symbol: '♣', color: 'black', value: '10', display: '10', points: 10, isWild: false, id: 'test4' },
-    { suit: 'hearts',   symbol: '♥', color: 'red',   value: 'Q',  display: 'Q',  points: 10, isWild: false, id: 'test5' },
-  ];
-  testCards.forEach(card => {
-    hand.appendChild(renderCard(card, { selectable: true }));
+
+
+// ── Game Setup & Deal ───────────────────────────────────────
+
+function startNewGame() {
+  // Build and shuffle the shoe
+  const shoe = buildShoe(1);
+
+  // Deal 11 cards to player
+  const hand = shoe.splice(0, 11);
+
+  // Flip top card to discard
+  const firstDiscard = shoe.splice(0, 1)[0];
+
+  // Set game state
+  gameState = {
+    deck: shoe,
+    discard: [firstDiscard],
+    players: [
+      { name: 'You', hand: hand, field: [], isDown: false }
+    ],
+    currentPlayerIndex: 0,
+    round: 0,
+    phase: 'draw',
+    selectedCard: null,
+  };
+
+  renderGameScreen();
+}
+
+function renderGameScreen() {
+  renderHand();
+  renderField();
+  renderDeckAndDiscard();
+  updateTopBar();
+  updateActionButtons();
+}
+
+function renderHand() {
+  const container = document.getElementById('play-hand-cards');
+  container.innerHTML = '';
+  const player = gameState.players[gameState.currentPlayerIndex];
+
+  player.hand.forEach(card => {
+    const el = renderCard(card, {
+      selectable: true,
+      onSelect: (c, cardEl) => {
+        // Deselect all other cards in hand
+        document.querySelectorAll('#play-hand-cards .card').forEach(other => {
+          if (other !== cardEl) other.classList.remove('selected');
+        });
+        updateActionButtons();
+      }
+    });
+    container.appendChild(el);
+  });
+}
+
+function renderDeckAndDiscard() {
+  // Draw pile
+  const deckEl = document.getElementById('play-deck');
+  deckEl.innerHTML = '';
+
+  const deckBack = document.createElement('div');
+  deckBack.className = 'card-back';
+
+  const deckCount = document.createElement('div');
+  deckCount.className = 'deck-count-badge';
+  deckCount.textContent = gameState.deck.length;
+  deckBack.appendChild(deckCount);
+
+  const deckLabel = document.createElement('div');
+  deckLabel.className = 'pile-label';
+  deckLabel.textContent = 'Draw';
+
+  deckEl.appendChild(deckBack);
+  deckEl.appendChild(deckLabel);
+
+  // Click draw pile to draw a card
+  deckBack.addEventListener('click', () => {
+    if (gameState.phase === 'draw') drawFromDeck();
   });
 
-  // Also show a card back in opponents area
-  const opponents = document.getElementById('play-opponents');
-  if (opponents) {
-    opponents.innerHTML = '';
-    const area = document.createElement('div');
-    area.className = 'opponent-area';
-    const name = document.createElement('div');
-    name.className = 'opponent-name';
-    name.textContent = 'Player 2';
-    const back = renderCardBack();
-    const count = document.createElement('div');
-    count.className = 'opponent-card-count';
-    count.textContent = '11 cards';
-    area.appendChild(name);
-    area.appendChild(back);
-    area.appendChild(count);
-    opponents.appendChild(area);
+  // Discard pile
+  const discardEl = document.getElementById('play-discard');
+  discardEl.innerHTML = '';
+
+  if (gameState.discard.length > 0) {
+    const topCard = gameState.discard[gameState.discard.length - 1];
+    const cardEl = renderCard(topCard);
+    discardEl.appendChild(cardEl);
+  } else {
+    const empty = document.createElement('div');
+    empty.className = 'empty-pile';
+    empty.textContent = 'Empty';
+    discardEl.appendChild(empty);
+  }
+
+  const discardLabel = document.createElement('div');
+  discardLabel.className = 'pile-label';
+  discardLabel.textContent = 'Discard';
+  discardEl.appendChild(discardLabel);
+
+  // Click discard pile to take top card
+  discardEl.addEventListener('click', () => {
+    if (gameState.phase === 'draw' && gameState.discard.length > 0) {
+      drawFromDiscard();
+    }
+  });
+}
+
+function updateTopBar() {
+  const round = ROUNDS[gameState.round];
+  document.getElementById('play-round-info').textContent =
+    'Round ' + (gameState.round + 1) + ' — ' + (round ? round.short : 'Done');
+  const player = gameState.players[gameState.currentPlayerIndex];
+  document.getElementById('play-turn-info').textContent = player.name + "'s Turn";
+}
+
+function updateActionButtons() {
+  const phase = gameState.phase;
+  const hasSelected = document.querySelector('#play-hand-cards .card.selected') !== null;
+  document.getElementById('play-draw-btn').disabled = phase !== 'draw';
+  document.getElementById('play-playcard-btn').disabled = phase !== 'play' || !hasSelected;
+  document.getElementById('play-discard-btn').disabled = phase !== 'play' || !hasSelected;
+  document.getElementById('play-godown-btn').disabled = phase !== 'play';
+  document.getElementById('play-endturn-btn').disabled = phase !== 'play';
+}
+
+// ── Draw Actions ────────────────────────────────────────────
+
+function drawFromDeck() {
+  if (gameState.deck.length === 0) {
+    // Reshuffle discard into deck except top card
+    const top = gameState.discard.pop();
+    gameState.deck = shuffle(gameState.discard);
+    gameState.discard = [top];
+  }
+
+  const card = gameState.deck.shift();
+  gameState.players[gameState.currentPlayerIndex].hand.push(card);
+  gameState.phase = 'play';
+
+  renderGameScreen();
+}
+
+function drawFromDiscard() {
+  const card = gameState.discard.pop();
+  gameState.players[gameState.currentPlayerIndex].hand.push(card);
+  gameState.phase = 'play';
+
+  renderGameScreen();
+}
+
+// ── Discard Action ──────────────────────────────────────────
+document.getElementById('play-discard-btn').addEventListener('click', () => {
+  if (gameState.phase !== 'play') return;
+
+  const selected = document.querySelectorAll('#play-hand-cards .card.selected');
+  if (selected.length !== 1) {
+    alert('Select exactly one card to discard.');
+    return;
+  }
+
+  const cardId = selected[0].dataset.cardId;
+  const player = gameState.players[gameState.currentPlayerIndex];
+  const cardIndex = player.hand.findIndex(c => c.id === cardId);
+
+  if (cardIndex !== -1) {
+    const card = player.hand.splice(cardIndex, 1)[0];
+    gameState.discard.push(card);
+  }
+
+  gameState.phase = 'draw';
+  renderGameScreen();
+});
+
+// Draw button as alternative to clicking the pile
+document.getElementById('play-draw-btn').addEventListener('click', () => {
+  if (gameState.phase === 'draw') drawFromDeck();
+});
+
+// ── Field Mechanics ─────────────────────────────────────────
+
+function renderField() {
+  const container = document.getElementById('play-field-cards');
+  container.innerHTML = '';
+  const player = gameState.players[gameState.currentPlayerIndex];
+
+  // Render each group
+  player.field.forEach((group, groupIndex) => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'field-group';
+    groupEl.dataset.groupIndex = groupIndex;
+
+    group.forEach(card => {
+      const cardEl = renderCard(card);
+      groupEl.appendChild(cardEl);
+    });
+
+    // Clicking a group adds selected hand card to it
+    groupEl.addEventListener('click', () => {
+      const selected = document.querySelector('#play-hand-cards .card.selected');
+      if (!selected) return;
+      const cardId = selected.dataset.cardId;
+      const hand = player.hand;
+      const cardIndex = hand.findIndex(c => c.id === cardId);
+      if (cardIndex === -1) return;
+
+      const card = hand.splice(cardIndex, 1)[0];
+      player.field[groupIndex].push(card);
+
+      renderField();
+      renderHand();
+      updateActionButtons();
+    });
+
+    container.appendChild(groupEl);
+  });
+
+  // New group button — always visible when in play phase
+  if (gameState.phase === 'play') {
+    const newGroupBtn = document.createElement('button');
+    newGroupBtn.className = 'new-group-btn';
+    newGroupBtn.textContent = '+';
+    newGroupBtn.title = 'Start new group';
+    newGroupBtn.addEventListener('click', () => {
+      const selected = document.querySelector('#play-hand-cards .card.selected');
+      if (!selected) {
+        alert('Select a card from your hand first.');
+        return;
+      }
+      const cardId = selected.dataset.cardId;
+      const hand = player.hand;
+      const cardIndex = hand.findIndex(c => c.id === cardId);
+      if (cardIndex === -1) return;
+
+      const card = hand.splice(cardIndex, 1)[0];
+      player.field.push([card]);
+
+      renderField();
+      renderHand();
+      updateActionButtons();
+    });
+    container.appendChild(newGroupBtn);
   }
 }
+
+// Play Card button — shortcut to start a new group
+document.getElementById('play-playcard-btn').addEventListener('click', () => {
+  if (gameState.phase !== 'play') return;
+  const selected = document.querySelector('#play-hand-cards .card.selected');
+  if (!selected) {
+    alert('Select a card from your hand first.');
+    return;
+  }
+  const player = gameState.players[gameState.currentPlayerIndex];
+  const cardId = selected.dataset.cardId;
+  const cardIndex = player.hand.findIndex(c => c.id === cardId);
+  if (cardIndex === -1) return;
+
+  const card = player.hand.splice(cardIndex, 1)[0];
+  player.field.push([card]);
+
+  renderField();
+  renderHand();
+  updateActionButtons();
+});

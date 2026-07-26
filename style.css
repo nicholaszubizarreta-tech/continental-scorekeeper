@@ -1227,3 +1227,86 @@ button.secondary {
   flex-shrink: 0;
   color: #c9a84c;
 }
+
+/* ── Deck Count Badge ── */
+.card-back {
+  position: relative;
+}
+
+.deck-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #c9a84c;
+  color: #1a1a2e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Field Groups ── */
+.field-group {
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px dashed #333;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.field-group:hover {
+  border-color: #c9a84c;
+}
+
+.field-group.targeted {
+  border-color: #c9a84c;
+  background: rgba(201, 168, 76, 0.1);
+}
+
+.field-group-label {
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.new-group-btn {
+  width: 52px;
+  height: 76px;
+  border-radius: 6px;
+  border: 2px dashed #c9a84c;
+  background: transparent;
+  color: #c9a84c;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.new-group-btn:hover {
+  background: rgba(201, 168, 76, 0.1);
+}
+
+#play-field-cards {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-height: 96px;
+  align-items: flex-start;
+  padding-bottom: 4px;
+}
